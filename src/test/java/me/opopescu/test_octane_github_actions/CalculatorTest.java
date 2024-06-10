@@ -3,7 +3,7 @@ package me.opopescu.test_octane_github_actions;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.*;
 
 public class CalculatorTest {
     @DisplayName("Add test for positive numbers")
@@ -100,5 +100,11 @@ public class CalculatorTest {
         int actualResult = calc.getResult();
 
         assertEquals(expectedResult, actualResult);
+    }
+
+    @DisplayName("Sleep for 5 minutes")
+    @Test
+    public void testSleep_when5Minutes() throws InterruptedException {
+        Thread.sleep(1000L * 60 * 5);
     }
 }
