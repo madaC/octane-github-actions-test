@@ -7,7 +7,7 @@ on:
   workflow_run:
     # List of workflows to integrate with ALM Octane
     workflows: [Java CI with Maven]
-    types: [requested, in_progress, completed]
+    types: [requested, completed]
     branches: [ 'master', 'test-branch', 'second-branch' ]
 # Node configuration for allowing HTTPS requests
 env:
@@ -21,7 +21,7 @@ jobs:
       - uses: actions/checkout@v4
       - name: GitHub Actions ALM Octane Integration
         # Reference to our public GitHub action
-        uses: ./
+        uses: MicroFocus/alm-octane-github-actions-integration@v23.3.0
         id: gitHubActionsIntegration
         # Config parameters for the integration
         with:
@@ -38,7 +38,5 @@ jobs:
           githubToken: ${{secrets.GITHUB_TOKEN}}
           # The url that the CI Server in ALM Octane will point to (own)
           serverBaseUrl: https://github.com/Stefan923/octane-github-actions-test
-          # Pattern for building the name of the pipeline
-          pipelineNamePattern: '${workflow_name}'
           # Pattern for identifying JUnit style report files for test result injection in ALM Octane
           unitTestResultsGlobPattern: "**/*.xml"
