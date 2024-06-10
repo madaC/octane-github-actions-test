@@ -19,10 +19,18 @@ jobs:
       with:
         distribution: 'temurin' # See 'Supported distributions' for available options
         java-version: '21'
-    - name: Build with Maven
+    - name: Build with Maven 1
       run: mvn -B package --file pom.xml
     - name: Run JUnit Tests
       run: mvn test
+    - name: Build with Maven 2
+      run: mvn -B package --file pom.xml
+    - name: Build with Maven 3
+      run: mvn -B package --file pom.xml
+    - name: Build with Maven 4
+      run: mvn -B package --file pom.xml
+    - name: Build with Maven 5
+      run: mvn -B package --file pom.xml
     - name: Archive JUnit Test Report
       uses: actions/upload-artifact@v2
       with:
