@@ -105,6 +105,6 @@ public class CalculatorTest {
     @DisplayName("Sleep for 5 minutes")
     @Test
     public void testSleep_when5Minutes() throws InterruptedException {
-        Thread.sleep(1000L * 60 * 5);
+        Thread.sleep(1000L * 60);
     }
 }
