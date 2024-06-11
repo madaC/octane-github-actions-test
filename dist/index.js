@@ -94468,7 +94468,7 @@ OctaneClient.getPipelineWithRetries = (rootJobName, ciServer, createOnAbsence = 
     while (retries > 0) {
         retries--;
         try {
-            return _a.getPipeline(rootJobName, ciServer, createOnAbsence, jobCiIdPrefix, jobs);
+            return yield _a.getPipeline(rootJobName, ciServer, createOnAbsence, jobCiIdPrefix, jobs);
         }
         catch (error) {
             lastError = error;
