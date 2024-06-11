@@ -94464,6 +94464,7 @@ OctaneClient.getPipeline = (rootJobName, ciServer, createOnAbsence = false, jobC
 });
 OctaneClient.getPipelineWithRetries = (rootJobName, ciServer, createOnAbsence = false, retries, jobCiIdPrefix, jobs) => __awaiter(void 0, void 0, void 0, function* () {
     let lastError = null;
+    console.log(`Try to get pipeline '${rootJobName}' with ${retries} retries.`);
     while (retries > 0) {
         retries--;
         try {
