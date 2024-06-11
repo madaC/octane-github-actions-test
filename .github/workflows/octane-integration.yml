@@ -15,7 +15,7 @@ env:
 jobs:
   octane_integration_job:
     # List of runner tags
-    runs-on: [self-hosted]
+    runs-on: ubuntu-latest
     name: OctaneIntegration#${{github.event.action}}#${{github.event.workflow_run.id}}
     steps:
       - uses: actions/checkout@v4
@@ -29,7 +29,7 @@ jobs:
           octaneUrl: 'http://0705a58042a0c8.lhr.life/dev' # PMO7
           #octaneUrl: 'https://falcon-apt-usually.ngrok-free.app/dev'
           octaneSharedSpace: 1001
-          octaneWorkspace: 2001 # PMO7: 2001
+          octaneWorkspace: 2001
           octaneClientId: GHA_Access_g79jz9ej8m99wi103o4wvpwlk
           #octaneClientId: ${{secrets.ALM_OCTANE_CLIENT_ID}} # PMO7
           octaneClientSecret: +150129108174243127179157C
