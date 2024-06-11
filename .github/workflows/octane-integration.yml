@@ -15,7 +15,7 @@ env:
 jobs:
   octane_integration_job:
     # List of runner tags
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted]
     name: OctaneIntegration#${{github.event.action}}#${{github.event.workflow_run.id}}
     steps:
       - uses: actions/checkout@v4
@@ -26,7 +26,7 @@ jobs:
         # Config parameters for the integration
         with:
           # ALM Octane connection data
-          octaneUrl: 'http://0705a58042a0c8.lhr.life/dev' # PMO7
+          octaneUrl: 'http://localhost:8080/dev' # PMO7
           #octaneUrl: 'https://falcon-apt-usually.ngrok-free.app/dev'
           octaneSharedSpace: 1001
           octaneWorkspace: 2001
