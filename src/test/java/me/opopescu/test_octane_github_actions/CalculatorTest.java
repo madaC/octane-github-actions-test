@@ -102,9 +102,9 @@ public class CalculatorTest {
         assertEquals(expectedResult, actualResult);
     }
 
-    @DisplayName("Sleep for 5 minutes")
+    @DisplayName("Sleep for 1 second")
     @Test
-    public void testSleep_when5Minutes() throws InterruptedException {
-        Thread.sleep(1000L * 60);
+    public void testSleep_when1Second() throws InterruptedException {
+        Thread.sleep(1000L);
     }
 }
