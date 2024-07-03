@@ -28,7 +28,7 @@ jobs:
           # ALM Octane connection data
           octaneUrl: 'https://laura-2.almoctane.com'
           octaneSharedSpace: 1001
-          octaneWorkspace: 2001
+          octaneWorkspace: 1003
           octaneClientId: ${{secrets.ALM_OCTANE_CLIENT_ID}}
           octaneClientSecret: ${{secrets.ALM_OCTANE_CLIENT_SECRET}}
           # Automatically provided GitHub token
