@@ -94667,6 +94667,7 @@ const handleEvent = (event) => __awaiter(void 0, void 0, void 0, function* () {
                     skipValidation: true
                 };
                 yield octaneClient_1.default.sendEvents([ciStartedPipelineEvent], pipelineData.instanceId, pipelineData.baseUrl);
+                yield (0, utils_1.sleep)(5);
                 pipelineData = yield (0, pipelineDataService_1.getPipelineData)(event, false, false);
             }
             const rootParentCauseData = {
