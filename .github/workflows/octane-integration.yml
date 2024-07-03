@@ -7,7 +7,7 @@ on:
   workflow_run:
     # List of workflows to integrate with ALM Octane
     workflows: [Java CI with Maven]
-    types: [requested, completed]
+    types: [requested, in_progress, completed]
     branches: [ 'master', 'test-branch', 'second-branch' ]
 # Node configuration for allowing HTTPS requests
 env:
@@ -26,17 +26,16 @@ jobs:
         # Config parameters for the integration
         with:
           # ALM Octane connection data
-          octaneUrl: 'https://pmo7.almoctane.com/' # PMO7
-          #octaneUrl: 'https://falcon-apt-usually.ngrok-free.app/dev'
+          octaneUrl: 'https://laura-2.almoctane.com'
           octaneSharedSpace: 1001
-          octaneWorkspace: 2001
-          #octaneClientId: GHA_Access_g79jz9ej8m99wi103o4wvpwlk
-          octaneClientId: ${{secrets.ALM_OCTANE_CLIENT_ID}} # PMO7
-          #octaneClientSecret: +150129108174243127179157C
-          octaneClientSecret: ${{secrets.ALM_OCTANE_CLIENT_SECRET}} # PMO7
+          octaneWorkspace: 1003
+          octaneClientId: ${{secrets.ALM_OCTANE_CLIENT_ID}}
+          octaneClientSecret: ${{secrets.ALM_OCTANE_CLIENT_SECRET}}
           # Automatically provided GitHub token
           githubToken: ${{secrets.GITHUB_TOKEN}}
           # The url that the CI Server in ALM Octane will point to (own)
           serverBaseUrl: https://github.com/Stefan923/octane-github-actions-test
+          # Pattern for building the name of the pipeline
+          pipelineNamePattern: '${workflow_name}'
           # Pattern for identifying JUnit style report files for test result injection in ALM Octane
           unitTestResultsGlobPattern: "**/*.xml"
