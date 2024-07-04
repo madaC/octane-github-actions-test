@@ -98977,7 +98977,7 @@ const getPipelineData = (rootJobName, event, shouldCreatePipelineAndCiServer, jo
     const instanceId = `GHA/${(0, config_1.getConfig)().octaneSharedSpace}/${(_a = event.repository) === null || _a === void 0 ? void 0 : _a.owner}`;
     console.log('Getting workspace name...');
     const sharedSpaceName = yield octaneClient_1.default.getSharedSpaceName((0, config_1.getConfig)().octaneSharedSpace);
-    const projectName = `GHA/${(_b = event.repository) === null || _b === void 0 ? void 0 : _b.owner}`;
+    const projectName = `GHA/${(_b = event.repository) === null || _b === void 0 ? void 0 : _b.owner.login}`;
     const baseUrl = (0, config_1.getConfig)().serverBaseUrl;
     console.log('Getting CI Server...');
     const ciServer = yield octaneClient_1.default.getCIServer(instanceId, projectName, baseUrl, shouldCreatePipelineAndCiServer);
