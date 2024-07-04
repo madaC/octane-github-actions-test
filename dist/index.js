@@ -98110,7 +98110,6 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 const alm_octane_js_rest_sdk_1 = __nccwpck_require__(15832);
 const query_1 = __importDefault(__nccwpck_require__(47052));
 const config_1 = __nccwpck_require__(84561);
-const utils_1 = __nccwpck_require__(80239);
 class OctaneClient {
     static escapeOctaneQueryValue(q) {
         return (q && q.replace(/\\/g, '\\\\').replace(/\(/g, '\\(').replace(/\)/g, '\\)'));
@@ -98215,21 +98214,6 @@ OctaneClient.getPipeline = (rootJobName, ciServer, createOnAbsence = false, jobC
         }
     }
     return pipelines.data[0];
-});
-OctaneClient.getPipelineWithRetries = (rootJobName, ciServer, createOnAbsence = false, retries, jobCiIdPrefix, jobs) => __awaiter(void 0, void 0, void 0, function* () {
-    let lastError = null;
-    while (retries > 0) {
-        retries--;
-        try {
-            return yield _a.getPipeline(rootJobName, ciServer, createOnAbsence, jobCiIdPrefix, jobs);
-        }
-        catch (error) {
-            lastError = error;
-            console.log(`Failed to get pipeline '${rootJobName}'. Retrying in 2 seconds...`);
-            yield (0, utils_1.sleep)(2 * 1000);
-        }
-    }
-    throw lastError;
 });
 OctaneClient.getCIServer = (instanceId, projectName, baseUri, createOnAbsence = false) => __awaiter(void 0, void 0, void 0, function* () {
     const ciServerQuery = query_1.default.field('instance_id')
@@ -98397,6 +98381,7 @@ const pipelineDataService_1 = __nccwpck_require__(27726);
 const scmDataService_1 = __nccwpck_require__(39266);
 const testResultsService_1 = __nccwpck_require__(29058);
 const utils_1 = __nccwpck_require__(80239);
+const genericPoller_1 = __nccwpck_require__(54479);
 const handleEvent = (event) => __awaiter(void 0, void 0, void 0, function* () {
     var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k;
     const startTime = new Date().getTime();
@@ -98422,7 +98407,7 @@ const handleEvent = (event) => __awaiter(void 0, void 0, void 0, function* () {
                 throw new Error('Event should contain workflow file path!');
             }
             const isWorkflowStarted = eventType == "in_progress" /* ActionsEventType.WORKFLOW_STARTED */;
-            console.log(`Getting pipeline data... ${JSON.stringify(event)}`);
+            console.log(`Getting pipeline data...`);
             const jobs = yield githubClient_1.default.getWorkflowRunJobs(owner, repoName, workflowRunId);
             const workflowFileName = (0, utils_1.extractWorkflowFileName)(workflowFilePath);
             console.log(workflowFileName);
@@ -98448,7 +98433,7 @@ const handleEvent = (event) => __awaiter(void 0, void 0, void 0, function* () {
                     skipValidation: true
                 };
                 yield octaneClient_1.default.sendEvents([ciStartedPipelineEvent], pipelineData.instanceId, pipelineData.baseUrl);
-                pipelineData = yield (0, pipelineDataService_1.getPipelineData)(`${pipelineData.rootJobName}/${branchName}`, event, false, undefined, undefined, 5);
+                pipelineData = yield new genericPoller_1.GenericPoller(() => (0, pipelineDataService_1.getPipelineData)(`${pipelineData.rootJobName}/${branchName}`, event, false), 10, 2 * 1000).poll();
             }
             const rootParentCauseData = {
                 isRoot: true,
@@ -98557,7 +98542,6 @@ const handleEvent = (event) => __awaiter(void 0, void 0, void 0, function* () {
                 console.log('Waiting for queued events to finish up...');
                 yield (0, ciEventsService_1.pollForJobsOfTypeToFinish)(owner, repoName, currentRun, workflowRunId, startTime, "in_progress" /* ActionsEventType.WORKFLOW_STARTED */);
                 const completedEvent = (0, ciEventsService_1.generateRootCiEvent)(event, pipelineData, "finished" /* CiEventType.FINISHED */, jobCiIdPrefix);
-                console.log(`Completed event: ${completedEvent}`);
                 yield octaneClient_1.default.sendEvents([completedEvent], pipelineData.instanceId, pipelineData.baseUrl);
                 if ((0, config_1.getConfig)().unitTestResultsGlobPattern) {
                     yield (0, testResultsService_1.sendJUnitTestResults)(owner, repoName, workflowRunId, pipelineData.buildCiId, `${jobCiIdPrefix}/${pipelineData.rootJobName}`, pipelineData.instanceId);
@@ -98988,23 +98972,18 @@ const getPipelineName = (event, owner, repoName, workflowFileName, isParent, pat
     return pipelineName;
 };
 exports.getPipelineName = getPipelineName;
-const getPipelineData = (rootJobName, event, shouldCreatePipelineAndCiServer, jobCiIdPrefix, jobs, retries = 1) => __awaiter(void 0, void 0, void 0, function* () {
-    var _a;
-    const instanceId = `GHA/${(0, config_1.getConfig)().octaneSharedSpace}`;
+const getPipelineData = (rootJobName, event, shouldCreatePipelineAndCiServer, jobCiIdPrefix, jobs) => __awaiter(void 0, void 0, void 0, function* () {
+    var _a, _b, _c;
+    const instanceId = `GHA/${(0, config_1.getConfig)().octaneSharedSpace}/${(_a = event.repository) === null || _a === void 0 ? void 0 : _a.owner}`;
     console.log('Getting workspace name...');
     const sharedSpaceName = yield octaneClient_1.default.getSharedSpaceName((0, config_1.getConfig)().octaneSharedSpace);
-    const projectName = `GHA/${sharedSpaceName}`;
+    const projectName = `GHA/${(_b = event.repository) === null || _b === void 0 ? void 0 : _b.owner}`;
     const baseUrl = (0, config_1.getConfig)().serverBaseUrl;
     console.log('Getting CI Server...');
     const ciServer = yield octaneClient_1.default.getCIServer(instanceId, projectName, baseUrl, shouldCreatePipelineAndCiServer);
     console.log(`Getting pipeline: '${rootJobName}'...`);
-    if (retries == 1) {
-        yield octaneClient_1.default.getPipeline(rootJobName, ciServer, shouldCreatePipelineAndCiServer, jobCiIdPrefix, jobs);
-    }
-    else {
-        yield octaneClient_1.default.getPipelineWithRetries(rootJobName, ciServer, shouldCreatePipelineAndCiServer, retries, jobCiIdPrefix, jobs);
-    }
-    const buildCiId = (_a = event.workflow_run) === null || _a === void 0 ? void 0 : _a.id.toString();
+    yield octaneClient_1.default.getPipeline(rootJobName, ciServer, shouldCreatePipelineAndCiServer, jobCiIdPrefix, jobs);
+    const buildCiId = (_c = event.workflow_run) === null || _c === void 0 ? void 0 : _c.id.toString();
     if (!buildCiId) {
         throw new Error('Event should contain workflow run data!');
     }
@@ -99285,12 +99264,80 @@ const sendJUnitTestResults = (owner, repo, workflowRunId, buildId, jobId, server
             build_id: buildId,
             job_id: jobId
         });
-        console.log(`Uploading test results to Octane: jobId='${jobId}'`);
         yield octaneClient_1.default.sendTestResult(convertedXML, serverId, jobId, buildId);
     }
     fs_extra_1.default.emptyDirSync(ARTIFACTS_DIR);
 });
 exports.sendJUnitTestResults = sendJUnitTestResults;
+
+
+/***/ }),
+
+/***/ 54479:
+/***/ (function(__unused_webpack_module, exports) {
+
+"use strict";
+
+/*
+ * Copyright 2016-2023 Open Text.
+ *
+ * The only warranties for products and services of Open Text and
+ * its affiliates and licensors (“Open Text”) are as may be set forth
+ * in the express warranty statements accompanying such products and services.
+ * Nothing herein should be construed as constituting an additional warranty.
+ * Open Text shall not be liable for technical or editorial errors or
+ * omissions contained herein. The information contained herein is subject
+ * to change without notice.
+ *
+ * Except as specifically indicated otherwise, this document contains
+ * confidential information and a valid license is required for possession,
+ * use or copying. If this work is provided to the U.S. Government,
+ * consistent with FAR 12.211 and 12.212, Commercial Computer Software,
+ * Computer Software Documentation, and Technical Data for Commercial Items are
+ * licensed to the U.S. Government under vendor's standard commercial license.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+*/
+var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.GenericPoller = void 0;
+class GenericPoller {
+    constructor(lambda, retries = 5, interval = 1000) {
+        this.lambda = lambda;
+        this.retries = retries;
+        this.interval = interval;
+    }
+    poll() {
+        return __awaiter(this, void 0, void 0, function* () {
+            for (let i = 0; i < this.retries; i++) {
+                try {
+                    return yield this.lambda();
+                }
+                catch (error) {
+                    yield new Promise(resolve => setTimeout(resolve, this.interval));
+                }
+            }
+            throw new Error('Polling failed after ' + this.retries + ' retries.');
+        });
+    }
+}
+exports.GenericPoller = GenericPoller;
 
 
 /***/ }),
