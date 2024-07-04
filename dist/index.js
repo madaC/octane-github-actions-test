@@ -99285,6 +99285,7 @@ const sendJUnitTestResults = (owner, repo, workflowRunId, buildId, jobId, server
             build_id: buildId,
             job_id: jobId
         });
+        console.log(`Uploading test results to Octane: jobId='${jobId}'`);
         yield octaneClient_1.default.sendTestResult(convertedXML, serverId, jobId, buildId);
     }
     fs_extra_1.default.emptyDirSync(ARTIFACTS_DIR);
