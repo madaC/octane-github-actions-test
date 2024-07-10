@@ -98169,7 +98169,7 @@ OctaneClient.createCISever = (name, instanceId, url) => __awaiter(void 0, void 0
         instance_id: instanceId,
         server_type: _a.GITHUB_ACTIONS_SERVER_TYPE,
         plugin_version: "24.4.2",
-        url
+        url: url
     })
         .fields('instance_id')
         .execute()).data[0];
