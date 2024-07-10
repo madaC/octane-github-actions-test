@@ -27,7 +27,7 @@ jobs:
         with:
           # ALM Octane connection data
           #octaneUrl: 'https://laura-2.almoctane.com'
-          octaneUrl: 'http://744da8a3320e0b.lhr.life/dev'
+          octaneUrl: 'http://localhost:8080/dev'
           octaneSharedSpace: 1001
           octaneWorkspace: 2001
           #octaneClientId: ${{secrets.ALM_OCTANE_CLIENT_ID}}
