@@ -52189,20 +52189,32 @@ function copyBuffer (cur) {
 
 function rfdc (opts) {
   opts = opts || {}
-
   if (opts.circles) return rfdcCircles(opts)
+
+  const constructorHandlers = new Map()
+  constructorHandlers.set(Date, (o) => new Date(o))
+  constructorHandlers.set(Map, (o, fn) => new Map(cloneArray(Array.from(o), fn)))
+  constructorHandlers.set(Set, (o, fn) => new Set(cloneArray(Array.from(o), fn)))
+  if (opts.constructorHandlers) {
+    for (const handler of opts.constructorHandlers) {
+      constructorHandlers.set(handler[0], handler[1])
+    }
+  }
+
+  let handler = null
+
   return opts.proto ? cloneProto : clone
 
   function cloneArray (a, fn) {
-    var keys = Object.keys(a)
-    var a2 = new Array(keys.length)
-    for (var i = 0; i < keys.length; i++) {
-      var k = keys[i]
-      var cur = a[k]
+    const keys = Object.keys(a)
+    const a2 = new Array(keys.length)
+    for (let i = 0; i < keys.length; i++) {
+      const k = keys[i]
+      const cur = a[k]
       if (typeof cur !== 'object' || cur === null) {
         a2[k] = cur
-      } else if (cur instanceof Date) {
-        a2[k] = new Date(cur)
+      } else if (cur.constructor !== Object && (handler = constructorHandlers.get(cur.constructor))) {
+        a2[k] = handler(cur, fn)
       } else if (ArrayBuffer.isView(cur)) {
         a2[k] = copyBuffer(cur)
       } else {
@@ -52214,22 +52226,18 @@ function rfdc (opts) {
 
   function clone (o) {
     if (typeof o !== 'object' || o === null) return o
-    if (o instanceof Date) return new Date(o)
     if (Array.isArray(o)) return cloneArray(o, clone)
-    if (o instanceof Map) return new Map(cloneArray(Array.from(o), clone))
-    if (o instanceof Set) return new Set(cloneArray(Array.from(o), clone))
-    var o2 = {}
-    for (var k in o) {
+    if (o.constructor !== Object && (handler = constructorHandlers.get(o.constructor))) {
+      return handler(o, clone)
+    }
+    const o2 = {}
+    for (const k in o) {
       if (Object.hasOwnProperty.call(o, k) === false) continue
-      var cur = o[k]
+      const cur = o[k]
       if (typeof cur !== 'object' || cur === null) {
         o2[k] = cur
-      } else if (cur instanceof Date) {
-        o2[k] = new Date(cur)
-      } else if (cur instanceof Map) {
-        o2[k] = new Map(cloneArray(Array.from(cur), clone))
-      } else if (cur instanceof Set) {
-        o2[k] = new Set(cloneArray(Array.from(cur), clone))
+      } else if (cur.constructor !== Object && (handler = constructorHandlers.get(cur.constructor))) {
+        o2[k] = handler(cur, clone)
       } else if (ArrayBuffer.isView(cur)) {
         o2[k] = copyBuffer(cur)
       } else {
@@ -52241,21 +52249,17 @@ function rfdc (opts) {
 
   function cloneProto (o) {
     if (typeof o !== 'object' || o === null) return o
-    if (o instanceof Date) return new Date(o)
     if (Array.isArray(o)) return cloneArray(o, cloneProto)
-    if (o instanceof Map) return new Map(cloneArray(Array.from(o), cloneProto))
-    if (o instanceof Set) return new Set(cloneArray(Array.from(o), cloneProto))
-    var o2 = {}
-    for (var k in o) {
-      var cur = o[k]
+    if (o.constructor !== Object && (handler = constructorHandlers.get(o.constructor))) {
+      return handler(o, cloneProto)
+    }
+    const o2 = {}
+    for (const k in o) {
+      const cur = o[k]
       if (typeof cur !== 'object' || cur === null) {
         o2[k] = cur
-      } else if (cur instanceof Date) {
-        o2[k] = new Date(cur)
-      } else if (cur instanceof Map) {
-        o2[k] = new Map(cloneArray(Array.from(cur), cloneProto))
-      } else if (cur instanceof Set) {
-        o2[k] = new Set(cloneArray(Array.from(cur), cloneProto))
+      } else if (cur.constructor !== Object && (handler = constructorHandlers.get(cur.constructor))) {
+        o2[k] = handler(cur, cloneProto)
       } else if (ArrayBuffer.isView(cur)) {
         o2[k] = copyBuffer(cur)
       } else {
@@ -52267,25 +52271,36 @@ function rfdc (opts) {
 }
 
 function rfdcCircles (opts) {
-  var refs = []
-  var refsNew = []
+  const refs = []
+  const refsNew = []
 
+  const constructorHandlers = new Map()
+  constructorHandlers.set(Date, (o) => new Date(o))
+  constructorHandlers.set(Map, (o, fn) => new Map(cloneArray(Array.from(o), fn)))
+  constructorHandlers.set(Set, (o, fn) => new Set(cloneArray(Array.from(o), fn)))
+  if (opts.constructorHandlers) {
+    for (const handler of opts.constructorHandlers) {
+      constructorHandlers.set(handler[0], handler[1])
+    }
+  }
+
+  let handler = null
   return opts.proto ? cloneProto : clone
 
   function cloneArray (a, fn) {
-    var keys = Object.keys(a)
-    var a2 = new Array(keys.length)
-    for (var i = 0; i < keys.length; i++) {
-      var k = keys[i]
-      var cur = a[k]
+    const keys = Object.keys(a)
+    const a2 = new Array(keys.length)
+    for (let i = 0; i < keys.length; i++) {
+      const k = keys[i]
+      const cur = a[k]
       if (typeof cur !== 'object' || cur === null) {
         a2[k] = cur
-      } else if (cur instanceof Date) {
-        a2[k] = new Date(cur)
+      } else if (cur.constructor !== Object && (handler = constructorHandlers.get(cur.constructor))) {
+        a2[k] = handler(cur, fn)
       } else if (ArrayBuffer.isView(cur)) {
         a2[k] = copyBuffer(cur)
       } else {
-        var index = refs.indexOf(cur)
+        const index = refs.indexOf(cur)
         if (index !== -1) {
           a2[k] = refsNew[index]
         } else {
@@ -52298,28 +52313,24 @@ function rfdcCircles (opts) {
 
   function clone (o) {
     if (typeof o !== 'object' || o === null) return o
-    if (o instanceof Date) return new Date(o)
     if (Array.isArray(o)) return cloneArray(o, clone)
-    if (o instanceof Map) return new Map(cloneArray(Array.from(o), clone))
-    if (o instanceof Set) return new Set(cloneArray(Array.from(o), clone))
-    var o2 = {}
+    if (o.constructor !== Object && (handler = constructorHandlers.get(o.constructor))) {
+      return handler(o, clone)
+    }
+    const o2 = {}
     refs.push(o)
     refsNew.push(o2)
-    for (var k in o) {
+    for (const k in o) {
       if (Object.hasOwnProperty.call(o, k) === false) continue
-      var cur = o[k]
+      const cur = o[k]
       if (typeof cur !== 'object' || cur === null) {
         o2[k] = cur
-      } else if (cur instanceof Date) {
-        o2[k] = new Date(cur)
-      } else if (cur instanceof Map) {
-        o2[k] = new Map(cloneArray(Array.from(cur), clone))
-      } else if (cur instanceof Set) {
-        o2[k] = new Set(cloneArray(Array.from(cur), clone))
+      } else if (cur.constructor !== Object && (handler = constructorHandlers.get(cur.constructor))) {
+        o2[k] = handler(cur, clone)
       } else if (ArrayBuffer.isView(cur)) {
         o2[k] = copyBuffer(cur)
       } else {
-        var i = refs.indexOf(cur)
+        const i = refs.indexOf(cur)
         if (i !== -1) {
           o2[k] = refsNew[i]
         } else {
@@ -52334,27 +52345,23 @@ function rfdcCircles (opts) {
 
   function cloneProto (o) {
     if (typeof o !== 'object' || o === null) return o
-    if (o instanceof Date) return new Date(o)
     if (Array.isArray(o)) return cloneArray(o, cloneProto)
-    if (o instanceof Map) return new Map(cloneArray(Array.from(o), cloneProto))
-    if (o instanceof Set) return new Set(cloneArray(Array.from(o), cloneProto))
-    var o2 = {}
+    if (o.constructor !== Object && (handler = constructorHandlers.get(o.constructor))) {
+      return handler(o, cloneProto)
+    }
+    const o2 = {}
     refs.push(o)
     refsNew.push(o2)
-    for (var k in o) {
-      var cur = o[k]
+    for (const k in o) {
+      const cur = o[k]
       if (typeof cur !== 'object' || cur === null) {
         o2[k] = cur
-      } else if (cur instanceof Date) {
-        o2[k] = new Date(cur)
-      } else if (cur instanceof Map) {
-        o2[k] = new Map(cloneArray(Array.from(cur), cloneProto))
-      } else if (cur instanceof Set) {
-        o2[k] = new Set(cloneArray(Array.from(cur), cloneProto))
+      } else if (cur.constructor !== Object && (handler = constructorHandlers.get(cur.constructor))) {
+        o2[k] = handler(cur, cloneProto)
       } else if (ArrayBuffer.isView(cur)) {
         o2[k] = copyBuffer(cur)
       } else {
-        var i = refs.indexOf(cur)
+        const i = refs.indexOf(cur)
         if (i !== -1) {
           o2[k] = refsNew[i]
         } else {
@@ -98092,7 +98099,7 @@ GitHubClient.getPullRequestCommitIds = (owner, repo, pullRequestNumber) => __awa
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
-*/
+ */
 var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
     function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
     return new (P || (P = Promise))(function (resolve, reject) {
@@ -98161,6 +98168,7 @@ OctaneClient.createCISever = (name, instanceId, url) => __awaiter(void 0, void 0
         name,
         instance_id: instanceId,
         server_type: _a.GITHUB_ACTIONS_SERVER_TYPE,
+        plugin_version: "24.4.0",
         url
     })
         .fields('instance_id')
@@ -98357,7 +98365,7 @@ exports.setConfig = setConfig;
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
-*/
+ */
 var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
     function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
     return new (P || (P = Promise))(function (resolve, reject) {
@@ -98433,7 +98441,7 @@ const handleEvent = (event) => __awaiter(void 0, void 0, void 0, function* () {
                     skipValidation: true
                 };
                 yield octaneClient_1.default.sendEvents([ciStartedPipelineEvent], pipelineData.instanceId, pipelineData.baseUrl);
-                pipelineData = yield new genericPoller_1.GenericPoller(() => (0, pipelineDataService_1.getPipelineData)(`${pipelineData.rootJobName}/${branchName}`, event, false), 10, 2 * 1000).poll();
+                pipelineData = yield new genericPoller_1.GenericPoller(() => (0, pipelineDataService_1.getPipelineData)(`${pipelineData.rootJobName}/${branchName}`, event, false), 20, 2 * 1000).poll();
             }
             const rootParentCauseData = {
                 isRoot: true,
@@ -98940,7 +98948,7 @@ const convertRootCauseType = (causeType) => {
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
-*/
+ */
 var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
     function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
     return new (P || (P = Promise))(function (resolve, reject) {
@@ -98964,11 +98972,14 @@ const getPipelineName = (event, owner, repoName, workflowFileName, isParent, pat
     if (!workflowName || !branchName) {
         throw new Error('Event should contain workflow data!');
     }
-    const tempPipelineName = pattern.replace('${repository_owner}', owner)
+    const tempPipelineName = pattern
+        .replace('${repository_owner}', owner)
         .replace('${repository_name}', repoName)
         .replace('${workflow_name}', workflowName)
         .replace('${workflow_file_name}', workflowFileName);
-    const pipelineName = isParent ? tempPipelineName : `${tempPipelineName}/${branchName}`;
+    const pipelineName = isParent
+        ? tempPipelineName
+        : `${tempPipelineName}/${branchName}`;
     return pipelineName;
 };
 exports.getPipelineName = getPipelineName;
@@ -99306,7 +99317,7 @@ exports.sendJUnitTestResults = sendJUnitTestResults;
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
-*/
+ */
 var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
     function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
     return new (P || (P = Promise))(function (resolve, reject) {
@@ -99334,7 +99345,7 @@ class GenericPoller {
                     yield new Promise(resolve => setTimeout(resolve, this.interval));
                 }
             }
-            throw new Error('Polling failed after ' + this.retries + ' retries.');
+            throw new Error(`Polling failed after ${this.retries} retries.`);
         });
     }
 }
