@@ -29,10 +29,10 @@ jobs:
           #octaneUrl: 'https://laura-2.almoctane.com'
           octaneUrl: 'http://localhost:8080/dev'
           octaneSharedSpace: 1001
-          octaneWorkspace: 2001
+          octaneWorkspace: 1002
           #octaneClientId: ${{secrets.ALM_OCTANE_CLIENT_ID}}
-          octaneClientId: GitHub_Actions_8eqj64e94d9zxbmz9yv8g3x2g
-          octaneClientSecret: (19233542148810520129K
+          octaneClientId: 'GitHubActions_gr0oml4k9xjeeure7p0o8v897'
+          octaneClientSecret: '%197804370178156145110B'
           #octaneClientSecret: ${{secrets.ALM_OCTANE_CLIENT_SECRET}}
           # Automatically provided GitHub token
           githubToken: ${{secrets.GITHUB_TOKEN}}
