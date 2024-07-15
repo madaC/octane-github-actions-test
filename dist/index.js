@@ -98267,11 +98267,10 @@ OctaneClient.updatePluginVersionIfNeeded = (instanceId, ciServer) => __awaiter(v
 OctaneClient.updatePluginVersion = (instanceId) => __awaiter(void 0, void 0, void 0, function* () {
     const querystring = __nccwpck_require__(63477);
     const sdk = "";
-    const escapedInstanceId = querystring.escape(instanceId);
     const pluginVersion = _a.GITHUB_ACTIONS_PLUGIN_VERSION;
     const client_id = _a.config.octaneClientId;
     const selfUrl = querystring.escape(_a.config.serverBaseUrl);
-    yield _a.octane.executeCustomRequest(`${_a.ANALYTICS_CI_INTERNAL_API_URL}/servers/${escapedInstanceId}/tasks?self-type=${_a.GITHUB_ACTIONS_SERVER_TYPE}&api-version=1&sdk-version=${sdk}&plugin-version=${pluginVersion}&self-url=${selfUrl}&client-id=${client_id}&client-server-user=`, alm_octane_js_rest_sdk_1.Octane.operationTypes.get);
+    yield _a.octane.executeCustomRequest(`${_a.ANALYTICS_CI_INTERNAL_API_URL}/servers/${instanceId}/tasks?self-type=${_a.GITHUB_ACTIONS_SERVER_TYPE}&api-version=1&sdk-version=${sdk}&plugin-version=${pluginVersion}&self-url=${selfUrl}&client-id=${client_id}&client-server-user=`, alm_octane_js_rest_sdk_1.Octane.operationTypes.get);
 });
 
 
@@ -98434,13 +98433,11 @@ const handleEvent = (event) => __awaiter(void 0, void 0, void 0, function* () {
             const isWorkflowQueued = eventType == "requested" /* ActionsEventType.WORKFLOW_QUEUED */;
             console.log(`Getting pipeline data...`);
             const jobs = yield githubClient_1.default.getWorkflowRunJobs(owner, repoName, workflowRunId);
-            const instanceId = `GHA/${owner}`;
-            const projectName = `GHA/${owner}`;
             const baseUrl = (0, config_1.getConfig)().serverBaseUrl;
             console.log('Getting CI Server...');
-            const ciServer = yield octaneClient_1.default.getCIServer(instanceId, projectName, baseUrl, isWorkflowQueued);
+            const ciServer = yield octaneClient_1.default.getCIServer(owner, owner, baseUrl, isWorkflowQueued);
             if (isWorkflowQueued) {
-                yield octaneClient_1.default.updatePluginVersionIfNeeded(instanceId, ciServer);
+                yield octaneClient_1.default.updatePluginVersionIfNeeded(owner, ciServer);
             }
             const workflowFileName = (0, utils_1.extractWorkflowFileName)(workflowFilePath);
             console.log(workflowFileName);
@@ -99011,7 +99008,6 @@ exports.getPipelineName = getPipelineName;
 const getPipelineData = (rootJobName, ciServer, event, shouldCreatePipelineAndCiServer, jobCiIdPrefix, jobs) => __awaiter(void 0, void 0, void 0, function* () {
     var _a, _b;
     const owner = (_a = event.repository) === null || _a === void 0 ? void 0 : _a.owner.login;
-    const instanceId = `GHA/${owner}`;
     const baseUrl = (0, config_1.getConfig)().serverBaseUrl;
     console.log(`Getting pipeline: '${rootJobName}'...`);
     yield octaneClient_1.default.getPipeline(rootJobName, ciServer, shouldCreatePipelineAndCiServer, jobCiIdPrefix, jobs);
@@ -99020,7 +99016,7 @@ const getPipelineData = (rootJobName, ciServer, event, shouldCreatePipelineAndCi
         throw new Error('Event should contain workflow run data!');
     }
     return {
-        instanceId,
+        instanceId: owner,
         rootJobName,
         baseUrl,
         buildCiId
