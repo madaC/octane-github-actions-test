@@ -98259,7 +98259,7 @@ OctaneClient.sendPullRequestData = (pullRequsts) => __awaiter(void 0, void 0, vo
 });
 OctaneClient.updatePluginVersionIfNeeded = (instanceId, ciServer) => __awaiter(void 0, void 0, void 0, function* () {
     console.log(`Current CI Server version: '${ciServer.plugin_version}'`);
-    if (!ciServer.plugin_version && (0, utils_1.isVersionGreaterOrEquals)(_a.GITHUB_ACTIONS_PLUGIN_VERSION, ciServer.plugin_version)) {
+    if (!ciServer.plugin_version || (0, utils_1.isVersionGreaterOrEquals)(_a.GITHUB_ACTIONS_PLUGIN_VERSION, ciServer.plugin_version)) {
         console.log(`Updating CI Server version to: '${_a.GITHUB_ACTIONS_PLUGIN_VERSION}'`);
         yield _a.updatePluginVersion(instanceId);
     }
@@ -98439,7 +98439,7 @@ const handleEvent = (event) => __awaiter(void 0, void 0, void 0, function* () {
             console.log('Getting CI Server...');
             const ciServer = yield octaneClient_1.default.getCIServer(instanceId, projectName, baseUrl, isWorkflowQueued);
             if (isWorkflowQueued) {
-                octaneClient_1.default.updatePluginVersionIfNeeded(instanceId, ciServer);
+                yield octaneClient_1.default.updatePluginVersionIfNeeded(instanceId, ciServer);
             }
             const workflowFileName = (0, utils_1.extractWorkflowFileName)(workflowFilePath);
             console.log(workflowFileName);
