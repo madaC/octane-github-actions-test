@@ -29,7 +29,7 @@ jobs:
           #octaneUrl: 'https://laura-2.almoctane.com'
           octaneUrl: 'http://localhost:8080/dev'
           octaneSharedSpace: 1001
-          octaneWorkspace: 2001
+          octaneWorkspace: 1002
           #octaneClientId: ${{secrets.ALM_OCTANE_CLIENT_ID}}
           octaneClientId: GitHubActions_nxg0wjlm0n6klho9ryl4yvy3q
           octaneClientSecret: =140871742042258668110A
