@@ -31,8 +31,8 @@ jobs:
           octaneSharedSpace: 1001
           octaneWorkspace: 2001
           #octaneClientId: ${{secrets.ALM_OCTANE_CLIENT_ID}}
-          octaneClientId: GitHubActions_m6dk91gvo5420ajvgyymj9pw0
-          octaneClientSecret: (183351002435417055139W
+          octaneClientId: GitHubActions_nxg0wjlm0n6klho9ryl4yvy3q
+          octaneClientSecret: =140871742042258668110A
           #octaneClientSecret: ${{secrets.ALM_OCTANE_CLIENT_SECRET}}
           # Automatically provided GitHub token
           githubToken: ${{secrets.GITHUB_TOKEN}}
