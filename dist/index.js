@@ -98229,7 +98229,7 @@ OctaneClient.getCIServer = (instanceId, projectName, baseUri, createOnAbsence = 
         .build();
     const ciServers = yield _a.octane
         .get('ci_servers')
-        .fields('instance_id')
+        .fields('instance_id,plugin_version,url')
         .query(ciServerQuery)
         .execute();
     if (!ciServers ||
@@ -98436,6 +98436,7 @@ const handleEvent = (event) => __awaiter(void 0, void 0, void 0, function* () {
             const baseUrl = (0, config_1.getConfig)().serverBaseUrl;
             console.log('Getting CI Server...');
             const ciServer = yield octaneClient_1.default.getCIServer(owner, owner, baseUrl, isWorkflowQueued);
+            console.log(`${JSON.stringify(ciServer)}`);
             if (isWorkflowQueued) {
                 yield octaneClient_1.default.updatePluginVersionIfNeeded(owner, ciServer);
             }
