@@ -98249,13 +98249,13 @@ OctaneClient.getSharedSpaceName = (sharedSpaceId) => __awaiter(void 0, void 0, v
     return (yield _a.octane.executeCustomRequest(`/api/shared_spaces?fields=name&query="id EQ ${sharedSpaceId}"`, alm_octane_js_rest_sdk_1.Octane.operationTypes.get)).data[0].name;
 });
 OctaneClient.getAllJobsByPipeline = (pipelineId, ciServerId) => __awaiter(void 0, void 0, void 0, function* () {
-    const jobQuery = query_1.default.field('pipeline_node').equal(query_1.default.field('pipeline').equal(query_1.default.field('id').equal(pipelineId)))
-        .and(query_1.default.field('ci_server').equal(query_1.default.field('id').equal(ciServerId)))
+    const pipelineNodeQuery = query_1.default.field('pipeline')
+        .equal(query_1.default.field('id').equal(pipelineId))
         .build();
     const jobs = yield _a.octane
-        .get('ci_jobs')
-        .fields('ci_id', 'ci_server')
-        .query(jobQuery)
+        .get('pipeline_nodes')
+        .fields('ci_job')
+        .query(pipelineNodeQuery)
         .execute();
     return jobs;
 });
