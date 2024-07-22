@@ -98208,7 +98208,7 @@ OctaneClient.getPipeline = (rootJobName, ciServer, createOnAbsence = false, jobC
         .build();
     const pipelines = yield _a.octane
         .get('pipelines')
-        .fields('name', 'ci_server')
+        .fields('name', 'ci_server', 'jobs')
         .query(pipelineQuery)
         .execute();
     if (!pipelines ||
@@ -98221,6 +98221,7 @@ OctaneClient.getPipeline = (rootJobName, ciServer, createOnAbsence = false, jobC
             throw new Error(`Pipeline '${rootJobName}' not found.`);
         }
     }
+    console.log(`${JSON.stringify(pipelines)}`);
     return pipelines.data[0];
 });
 OctaneClient.getCIServer = (instanceId, projectName, baseUri, createOnAbsence = false) => __awaiter(void 0, void 0, void 0, function* () {
@@ -98264,6 +98265,28 @@ OctaneClient.updatePluginVersionIfNeeded = (instanceId, ciServer) => __awaiter(v
         yield _a.updatePluginVersion(instanceId);
     }
 });
+// public static updateExistingCIJobs = async (
+//   ciJobs: CiJobBody[],
+//   instanceId: String,
+//   workspaceId: String,
+//   rootJobCiId: String
+// ): Promise<void> => {
+//   let ciJobsToUpdate = [];
+//   for(const ciJob of ciJobs){
+//       if (ciJob.name === this.agentJobName || BaseTask.ALM_OCTANE_PIPELINE_START.toLowerCase() === ciJob.name?.toLowerCase()) {
+//           ciJobsToUpdate.push({
+//               'name': ciJob.name,
+//               'jobId': ciJob.id,
+//               'jobCiId': rootJobCiId
+//           });
+//       }
+//   }
+//   if(ciJobsToUpdate.length > 0) {
+//       this.logger.info('CI Jobs update body:' + ciJobs);
+//       const url = this.ciInternalAzureApiUrlPart.replace('{workspace_id}', workspaceId) + '/ci_job_update?ci-server-id=' + ciServerId;
+//       await octaneSDKConnection._requestHandler.update(url, ciJobsToUpdate);
+//   }
+// }
 OctaneClient.updatePluginVersion = (instanceId) => __awaiter(void 0, void 0, void 0, function* () {
     const querystring = __nccwpck_require__(63477);
     const sdk = "";
