@@ -98501,7 +98501,7 @@ const handleEvent = (event) => __awaiter(void 0, void 0, void 0, function* () {
                 yield octaneClient_1.default.sendEvents([ciStartedPipelineEvent], pipelineData.instanceId, pipelineData.baseUrl);
                 pipelineData = yield new genericPoller_1.GenericPoller(() => (0, pipelineDataService_1.getPipelineData)(`${pipelineData.rootJobName}/${branchName}`, ciServer, event, false), 20, 2 * 1000).poll();
                 const jobs = (0, ciJobService_1.getAllJobsByPipeline)(pipelineData.pipelineId, ciServer.id);
-                console.log(`Ci Jobs: ${JSON.stringify(jobs)}`);
+                console.log(`Ci Jobs for pipeline ${pipelineData.pipelineId} and ci server ${ciServer.id}: ${JSON.stringify(jobs)}`);
             }
             const rootParentCauseData = {
                 isRoot: true,
