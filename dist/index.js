@@ -98208,7 +98208,7 @@ OctaneClient.getPipeline = (rootJobName, ciServer, createOnAbsence = false, jobC
         .build();
     const pipelines = yield _a.octane
         .get('pipelines')
-        .fields('name', 'ci_server', 'jobs')
+        .fields('name', 'ci_server', 'jobs', 'pipeline_parameters')
         .query(pipelineQuery)
         .execute();
     if (!pipelines ||
