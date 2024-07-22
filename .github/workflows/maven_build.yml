@@ -2,6 +2,12 @@ name: Java CI with Maven
 
 on:
   workflow_dispatch:
+    inputs:
+      username:
+        description: 'A username passed from the caller workflow'
+        default: 'john-doe'
+        required: false
+        type: string
   # push:
   #   branches: [ "master" ]
   # pull_request:
