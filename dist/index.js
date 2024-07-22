@@ -98208,7 +98208,7 @@ OctaneClient.getPipeline = (rootJobName, ciServer, createOnAbsence = false, jobC
         .build();
     const pipelines = yield _a.octane
         .get('pipelines')
-        .fields('name', 'ci_server', 'jobs', 'pipeline_parameters')
+        .fields('name', 'ci_server')
         .query(pipelineQuery)
         .execute();
     if (!pipelines ||
@@ -98247,6 +98247,17 @@ OctaneClient.getCIServer = (instanceId, projectName, baseUri, createOnAbsence = 
 });
 OctaneClient.getSharedSpaceName = (sharedSpaceId) => __awaiter(void 0, void 0, void 0, function* () {
     return (yield _a.octane.executeCustomRequest(`/api/shared_spaces?fields=name&query="id EQ ${sharedSpaceId}"`, alm_octane_js_rest_sdk_1.Octane.operationTypes.get)).data[0].name;
+});
+OctaneClient.getAllJobsByPipeline = (pipelineId, ciServerId) => __awaiter(void 0, void 0, void 0, function* () {
+    const jobQuery = query_1.default.field('pipeline').equal(query_1.default.field('id').equal(pipelineId))
+        .and(query_1.default.field('ci_server').equal(query_1.default.field('id').equal(ciServerId)))
+        .build();
+    const jobs = yield _a.octane
+        .get('ci_jobs')
+        .fields('ci_id', 'ci_server')
+        .query(jobQuery)
+        .execute();
+    return jobs;
 });
 OctaneClient.getJobBuilds = (jobId) => __awaiter(void 0, void 0, void 0, function* () {
     return (yield _a.octane
@@ -98428,6 +98439,7 @@ const scmDataService_1 = __nccwpck_require__(39266);
 const testResultsService_1 = __nccwpck_require__(29058);
 const utils_1 = __nccwpck_require__(80239);
 const genericPoller_1 = __nccwpck_require__(54479);
+const ciJobService_1 = __nccwpck_require__(48530);
 const handleEvent = (event) => __awaiter(void 0, void 0, void 0, function* () {
     var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k;
     const startTime = new Date().getTime();
@@ -98488,6 +98500,8 @@ const handleEvent = (event) => __awaiter(void 0, void 0, void 0, function* () {
                 };
                 yield octaneClient_1.default.sendEvents([ciStartedPipelineEvent], pipelineData.instanceId, pipelineData.baseUrl);
                 pipelineData = yield new genericPoller_1.GenericPoller(() => (0, pipelineDataService_1.getPipelineData)(`${pipelineData.rootJobName}/${branchName}`, ciServer, event, false), 20, 2 * 1000).poll();
+                const jobs = (0, ciJobService_1.getAllJobsByPipeline)(pipelineData.pipelineId, ciServer.id);
+                console.log(`Ci Jobs: ${JSON.stringify(jobs)}`);
             }
             const rootParentCauseData = {
                 isRoot: true,
@@ -98890,6 +98904,34 @@ const getRunResult = (conclusion) => {
 
 /***/ }),
 
+/***/ 48530:
+/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
+
+"use strict";
+
+var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.getAllJobsByPipeline = void 0;
+const octaneClient_1 = __importDefault(__nccwpck_require__(18607));
+const getAllJobsByPipeline = (pipelineId, ciServerId) => __awaiter(void 0, void 0, void 0, function* () {
+    return yield octaneClient_1.default.getAllJobsByPipeline(pipelineId, ciServerId);
+});
+exports.getAllJobsByPipeline = getAllJobsByPipeline;
+
+
+/***/ }),
+
 /***/ 54007:
 /***/ ((__unused_webpack_module, exports) => {
 
@@ -99034,12 +99076,13 @@ const getPipelineData = (rootJobName, ciServer, event, shouldCreatePipelineAndCi
     const owner = (_a = event.repository) === null || _a === void 0 ? void 0 : _a.owner.login;
     const baseUrl = (0, config_1.getConfig)().serverBaseUrl;
     console.log(`Getting pipeline: '${rootJobName}'...`);
-    yield octaneClient_1.default.getPipeline(rootJobName, ciServer, shouldCreatePipelineAndCiServer, jobCiIdPrefix, jobs);
+    const pipeline = yield octaneClient_1.default.getPipeline(rootJobName, ciServer, shouldCreatePipelineAndCiServer, jobCiIdPrefix, jobs);
     const buildCiId = (_b = event.workflow_run) === null || _b === void 0 ? void 0 : _b.id.toString();
     if (!buildCiId) {
         throw new Error('Event should contain workflow run data!');
     }
     return {
+        pipelineId: pipeline.id,
         instanceId: owner,
         rootJobName,
         baseUrl,
