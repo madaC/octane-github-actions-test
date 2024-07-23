@@ -98255,7 +98255,7 @@ OctaneClient.getPipelineByRootJobCiId = (rootJobCiId, ciServer) => __awaiter(voi
         .fields('name', 'ci_server{instance_id}')
         .query(pipelineQuery)
         .execute();
-    console.log(`Found pipelines: ${JSON.stringify(pipelines)}`);
+    console.log(`Found pipelines (ci_id='${rootJobCiId}';ci_server_id='${ciServer.id}'): ${JSON.stringify(pipelines)}`);
     if (!pipelines || pipelines.total_count === 0 || pipelines.data.length === 0) {
         return undefined;
     }
