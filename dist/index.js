@@ -98248,16 +98248,20 @@ OctaneClient.getCIServer = (instanceId, projectName, baseUri, createOnAbsence = 
 OctaneClient.getSharedSpaceName = (sharedSpaceId) => __awaiter(void 0, void 0, void 0, function* () {
     return (yield _a.octane.executeCustomRequest(`/api/shared_spaces?fields=name&query="id EQ ${sharedSpaceId}"`, alm_octane_js_rest_sdk_1.Octane.operationTypes.get)).data[0].name;
 });
-OctaneClient.getAllJobsByPipeline = (pipelineId, ciServerId) => __awaiter(void 0, void 0, void 0, function* () {
+OctaneClient.getAllJobsByPipeline = (pipelineId) => __awaiter(void 0, void 0, void 0, function* () {
     const pipelineNodeQuery = query_1.default.field('pipeline')
         .equal(query_1.default.field('id').equal(pipelineId))
         .build();
-    const jobs = yield _a.octane
+    const response = yield _a.octane
         .get('pipeline_nodes')
         .fields('ci_job{ci_id}')
         .query(pipelineNodeQuery)
         .execute();
-    console.log(`getAllJobsByPipeline(): ${JSON.stringify(jobs)}`);
+    const pipelineNodes = response.data;
+    const jobs = [];
+    pipelineNodes.forEach((pipelineNode) => {
+        jobs.push(pipelineNode.ciJob);
+    });
     return jobs;
 });
 OctaneClient.getJobBuilds = (jobId) => __awaiter(void 0, void 0, void 0, function* () {
@@ -98501,7 +98505,7 @@ const handleEvent = (event) => __awaiter(void 0, void 0, void 0, function* () {
                 };
                 yield octaneClient_1.default.sendEvents([ciStartedPipelineEvent], pipelineData.instanceId, pipelineData.baseUrl);
                 pipelineData = yield new genericPoller_1.GenericPoller(() => (0, pipelineDataService_1.getPipelineData)(`${pipelineData.rootJobName}/${branchName}`, ciServer, event, false), 20, 2 * 1000).poll();
-                const jobs = (0, ciJobService_1.getAllJobsByPipeline)(pipelineData.pipelineId, ciServer.id);
+                const jobs = (0, ciJobService_1.getAllJobsByPipeline)(pipelineData.pipelineId);
                 console.log(`Ci Jobs for pipeline ${pipelineData.pipelineId} and ci server ${ciServer.id}: ${JSON.stringify(jobs)}`);
             }
             const rootParentCauseData = {
@@ -98925,8 +98929,8 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.getAllJobsByPipeline = void 0;
 const octaneClient_1 = __importDefault(__nccwpck_require__(18607));
-const getAllJobsByPipeline = (pipelineId, ciServerId) => __awaiter(void 0, void 0, void 0, function* () {
-    return yield octaneClient_1.default.getAllJobsByPipeline(pipelineId, ciServerId);
+const getAllJobsByPipeline = (pipelineId) => __awaiter(void 0, void 0, void 0, function* () {
+    return yield octaneClient_1.default.getAllJobsByPipeline(pipelineId);
 });
 exports.getAllJobsByPipeline = getAllJobsByPipeline;
 
