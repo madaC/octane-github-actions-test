@@ -98260,7 +98260,7 @@ OctaneClient.getAllJobsByPipeline = (pipelineId) => __awaiter(void 0, void 0, vo
     const pipelineNodes = response.data;
     const jobs = [];
     pipelineNodes.forEach((pipelineNode) => {
-        jobs.push(pipelineNode.ciJob);
+        jobs.push(pipelineNode.ci_job);
     });
     return jobs;
 });
