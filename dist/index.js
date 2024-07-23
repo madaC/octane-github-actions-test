@@ -98254,7 +98254,7 @@ OctaneClient.getAllJobsByPipeline = (pipelineId, ciServerId) => __awaiter(void 0
         .build();
     const jobs = yield _a.octane
         .get('pipeline_nodes')
-        .fields('ci_job')
+        .fields('ci_job{ci_id}')
         .query(pipelineNodeQuery)
         .execute();
     console.log(`getAllJobsByPipeline(): ${JSON.stringify(jobs)}`);
