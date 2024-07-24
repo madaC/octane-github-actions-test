@@ -98534,7 +98534,7 @@ const handleEvent = (event) => __awaiter(void 0, void 0, void 0, function* () {
                 shortJobCiIdPrefix : `${shortJobCiIdPrefix}/${branchName}`;
             const pipelineName = (0, pipelineDataService_1.getPipelineName)(event, owner, repoName, workflowFileName, eventType != "completed" /* ActionsEventType.WORKFLOW_FINISHED */, pipelineNamePattern);
             yield (0, pipelineDataService_1.updatePipelineNameIfNeeded)(`${jobCiIdPrefix}*`, ciServer, "");
-            if (eventType == "requested" /* ActionsEventType.WORKFLOW_QUEUED */) {
+            if (isWorkflowQueued) {
                 yield (0, migrationService_1.performMigrations)(event, pipelineName, jobCiIdPrefix, ciServer);
             }
             let pipelineData = yield (0, pipelineDataService_1.getPipelineData)(pipelineName, ciServer, event, isWorkflowQueued, jobCiIdPrefix, jobs);
@@ -99284,6 +99284,7 @@ const updatePipelineNameIfNeeded = (rootJobCiId, ciServer, pipelineName) => __aw
 });
 exports.updatePipelineNameIfNeeded = updatePipelineNameIfNeeded;
 const upgradePipelineToMultiBranchIfNeeded = (pipelineName, ciIdPrefix, ciServer) => __awaiter(void 0, void 0, void 0, function* () {
+    console.log(`Looking for pipeline '${pipelineName}'...`);
     const pipeline = yield octaneClient_1.default.getPipelineByName(pipelineName, ciServer);
     console.log(JSON.stringify(pipeline));
     if (!pipeline || pipeline.multi_branch_type !== "null" /* MultiBranchType.NONE */) {
