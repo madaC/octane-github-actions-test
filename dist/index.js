@@ -99285,7 +99285,7 @@ const upgradePipelineToMultiBranchIfNeeded = (pipelineName, ciIdPrefix, ciServer
     console.log(`Looking for pipeline '${pipelineName}'...`);
     const pipeline = yield octaneClient_1.default.getPipelineByName(pipelineName);
     console.log(JSON.stringify(pipeline));
-    if (!pipeline || pipeline.multi_branch_type !== "null" /* MultiBranchType.NONE */) {
+    if (!pipeline || pipeline.multi_branch_type !== null) {
         return;
     }
     console.log(`Migrating '${pipelineName}' to multi-branch pipeline...`);
