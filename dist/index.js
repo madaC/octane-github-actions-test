@@ -98483,6 +98483,7 @@ const scmDataService_1 = __nccwpck_require__(39266);
 const testResultsService_1 = __nccwpck_require__(29058);
 const utils_1 = __nccwpck_require__(80239);
 const genericPoller_1 = __nccwpck_require__(54479);
+const migrationService_1 = __nccwpck_require__(22815);
 const handleEvent = (event) => __awaiter(void 0, void 0, void 0, function* () {
     var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k;
     const startTime = new Date().getTime();
@@ -98524,7 +98525,9 @@ const handleEvent = (event) => __awaiter(void 0, void 0, void 0, function* () {
             const jobCiIdPrefix = `${owner}/${repoName}/${workflowFileName}`;
             const pipelineName = (0, pipelineDataService_1.getPipelineName)(event, owner, repoName, workflowFileName, eventType != "completed" /* ActionsEventType.WORKFLOW_FINISHED */, pipelineNamePattern);
             yield (0, pipelineDataService_1.updatePipelineNameIfNeeded)(`${jobCiIdPrefix}*`, ciServer, "");
-            yield (0, pipelineDataService_1.upgradePipelineToMultiBranchIfNeeded)(pipelineName, pipelineName, ciServer);
+            if (eventType == "requested" /* ActionsEventType.WORKFLOW_QUEUED */) {
+                yield (0, migrationService_1.performMigrations)(event, pipelineName, ciServer);
+            }
             let pipelineData = yield (0, pipelineDataService_1.getPipelineData)(pipelineName, ciServer, event, isWorkflowQueued, jobCiIdPrefix, jobs);
             if (isWorkflowStarted) {
                 const branchName = (_f = event.workflow_run) === null || _f === void 0 ? void 0 : _f.head_branch;
@@ -99020,6 +99023,86 @@ const convertRootCauseType = (causeType) => {
         default:
             return "undefined" /* CiCausesType.UNDEFINED */;
     }
+};
+
+
+/***/ }),
+
+/***/ 22815:
+/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
+
+"use strict";
+
+/*
+ * Copyright 2016-2023 Open Text.
+ *
+ * The only warranties for products and services of Open Text and
+ * its affiliates and licensors (“Open Text”) are as may be set forth
+ * in the express warranty statements accompanying such products and services.
+ * Nothing herein should be construed as constituting an additional warranty.
+ * Open Text shall not be liable for technical or editorial errors or
+ * omissions contained herein. The information contained herein is subject
+ * to change without notice.
+ *
+ * Except as specifically indicated otherwise, this document contains
+ * confidential information and a valid license is required for possession,
+ * use or copying. If this work is provided to the U.S. Government,
+ * consistent with FAR 12.211 and 12.212, Commercial Computer Software,
+ * Computer Software Documentation, and Technical Data for Commercial Items are
+ * licensed to the U.S. Government under vendor's standard commercial license.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.performMigrations = void 0;
+const octaneClient_1 = __importDefault(__nccwpck_require__(18607));
+const config_1 = __nccwpck_require__(84561);
+const pipelineDataService_1 = __nccwpck_require__(27726);
+const performMigrations = (event, newPipelineName, ciServer) => __awaiter(void 0, void 0, void 0, function* () {
+    var _a;
+    const workflowName = (_a = event.workflow) === null || _a === void 0 ? void 0 : _a.name;
+    if (!workflowName) {
+        return;
+    }
+    yield performMultiBranchPipelineMigration(workflowName, newPipelineName, ciServer);
+    yield migrateCiServerIfNeeded();
+});
+exports.performMigrations = performMigrations;
+const performMultiBranchPipelineMigration = (workflowName, newPipelineName, ciServer) => __awaiter(void 0, void 0, void 0, function* () {
+    const config = (0, config_1.getConfig)();
+    const sharedSpaceName = yield octaneClient_1.default.getSharedSpaceName(config.octaneSharedSpace);
+    const oldPipelineName = `GHA/${sharedSpaceName}/${workflowName}`;
+    yield (0, pipelineDataService_1.upgradePipelineToMultiBranchIfNeeded)(oldPipelineName, newPipelineName, ciServer);
+});
+const migrateCiServerIfNeeded = () => __awaiter(void 0, void 0, void 0, function* () {
+    const oldCiServerInstanceId = `GHA/${(0, config_1.getConfig)().octaneSharedSpace}`;
+    const ciServer = yield octaneClient_1.default.getCiServer(oldCiServerInstanceId);
+    if (!ciServer) {
+        return;
+    }
+});
+const checkForCiServerMigration = (oldCiServerInstanceId) => {
+    return true;
 };
 
 
