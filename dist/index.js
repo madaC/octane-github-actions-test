@@ -98334,6 +98334,7 @@ OctaneClient.updateCiJobs = (ciJobs, ciServerId, newCiServerId) => __awaiter(voi
             }
         });
     });
+    console.log(`Jobs update (${ciServerId}): ${JSON.stringify(requestPayload)}`);
     if (requestPayload.length > 0) {
         const url = _a.ANALYTICS_CI_INTERNAL_API_URL + '/ci_job_update?ci-server-id=' + ciServerId;
         yield _a.octane.update(url, requestPayload);
@@ -99019,8 +99020,11 @@ const updateJobsIfNeeded = (jobs, ciIdPrefix, ciServer, newCiServerId) => __awai
     const jobsToUpdate = [];
     jobs.forEach((ciJob) => {
         if (checkIfNeedsUpdate(ciJob, ciIdPrefix)) {
-            ciJob.ci_id = `${ciIdPrefix}/${ciJob.name}`;
-            jobsToUpdate.push(ciJob);
+            jobsToUpdate.push({
+                jobId: ciJob.id,
+                name: ciJob.name,
+                jobCiId: `${ciIdPrefix}/${ciJob.name}`
+            });
         }
     });
     if (jobsToUpdate.length > 0) {
