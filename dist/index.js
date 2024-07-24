@@ -98533,7 +98533,7 @@ const handleEvent = (event) => __awaiter(void 0, void 0, void 0, function* () {
             const pipelineName = (0, pipelineDataService_1.getPipelineName)(event, owner, repoName, workflowFileName, eventType != "completed" /* ActionsEventType.WORKFLOW_FINISHED */, pipelineNamePattern);
             yield (0, pipelineDataService_1.updatePipelineNameIfNeeded)(`${jobCiIdPrefix}*`, ciServer, "");
             if (isWorkflowQueued) {
-                yield (0, migrationService_1.performMigrations)(event, pipelineName, jobCiIdPrefix, ciServer);
+                yield (0, migrationService_1.performMigrations)(event, pipelineName, shortJobCiIdPrefix, ciServer);
             }
             let pipelineData = yield (0, pipelineDataService_1.getPipelineData)(pipelineName, ciServer, event, isWorkflowQueued, jobCiIdPrefix, jobs);
             if (isWorkflowStarted) {
