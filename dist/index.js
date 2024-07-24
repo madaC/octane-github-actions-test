@@ -98177,7 +98177,7 @@ OctaneClient.createCISever = (name, instanceId, url) => __awaiter(void 0, void 0
 OctaneClient.createPipeline = (pipelineName, ciServer, jobCiIdPrefix, jobs) => __awaiter(void 0, void 0, void 0, function* () {
     const pipelineJobs = jobs === null || jobs === void 0 ? void 0 : jobs.map(job => {
         const jobName = job.name;
-        const jobFullName = `${jobCiIdPrefix}/${pipelineName}/${jobName}`;
+        const jobFullName = `${jobCiIdPrefix}/${jobName}`;
         return {
             name: jobName,
             jobCiId: jobFullName
@@ -98185,7 +98185,7 @@ OctaneClient.createPipeline = (pipelineName, ciServer, jobCiIdPrefix, jobs) => _
     });
     pipelineJobs === null || pipelineJobs === void 0 ? void 0 : pipelineJobs.push({
         name: pipelineName,
-        jobCiId: `${jobCiIdPrefix}/${pipelineName}`
+        jobCiId: `${jobCiIdPrefix}`
     });
     console.log(`Creating pipeline '${pipelineName}'...`);
     return (yield _a.octane
@@ -98195,7 +98195,7 @@ OctaneClient.createPipeline = (pipelineName, ciServer, jobCiIdPrefix, jobs) => _
             type: 'ci_server',
             id: ciServer.id
         },
-        root_job_ci_id: `${jobCiIdPrefix}/${pipelineName}`,
+        root_job_ci_id: `${jobCiIdPrefix}`,
         jobs: pipelineJobs
     })
         .execute()).data[0];
@@ -98500,6 +98500,7 @@ const handleEvent = (event) => __awaiter(void 0, void 0, void 0, function* () {
     const workflowRunId = (_d = event.workflow_run) === null || _d === void 0 ? void 0 : _d.id;
     const runNumber = (_e = event.workflow_run) === null || _e === void 0 ? void 0 : _e.run_number;
     const pipelineNamePattern = (0, config_1.getConfig)().pipelineNamePattern;
+    const branchName = (_f = event.workflow_run) === null || _f === void 0 ? void 0 : _f.head_branch;
     if (!owner || !repoName) {
         throw new Error('Event should contain repository data!');
     }
@@ -98528,7 +98529,9 @@ const handleEvent = (event) => __awaiter(void 0, void 0, void 0, function* () {
             }
             const workflowFileName = (0, utils_1.extractWorkflowFileName)(workflowFilePath);
             console.log(workflowFileName);
-            const jobCiIdPrefix = `${owner}/${repoName}/${workflowFileName}`;
+            const jobCiIdPrefix = isWorkflowQueued ?
+                `${owner}/${repoName}/${workflowFileName}` :
+                `${owner}/${repoName}/${workflowFileName}/${branchName}`;
             const pipelineName = (0, pipelineDataService_1.getPipelineName)(event, owner, repoName, workflowFileName, eventType != "completed" /* ActionsEventType.WORKFLOW_FINISHED */, pipelineNamePattern);
             yield (0, pipelineDataService_1.updatePipelineNameIfNeeded)(`${jobCiIdPrefix}*`, ciServer, "");
             if (eventType == "requested" /* ActionsEventType.WORKFLOW_QUEUED */) {
@@ -98536,19 +98539,18 @@ const handleEvent = (event) => __awaiter(void 0, void 0, void 0, function* () {
             }
             let pipelineData = yield (0, pipelineDataService_1.getPipelineData)(pipelineName, ciServer, event, isWorkflowQueued, jobCiIdPrefix, jobs);
             if (isWorkflowStarted) {
-                const branchName = (_f = event.workflow_run) === null || _f === void 0 ? void 0 : _f.head_branch;
                 if (!branchName) {
                     throw new Error('Event should contain workflow data!');
                 }
                 console.log(`Creating child pipeline: ${pipelineData.rootJobName}/${branchName}`);
                 let ciStartedPipelineEvent = {
                     buildCiId: pipelineData.buildCiId,
-                    project: `${jobCiIdPrefix}/${pipelineData.rootJobName}/${branchName}`,
+                    project: `${jobCiIdPrefix}/${branchName}`,
                     projectDisplayName: `${pipelineData.rootJobName}/${branchName}`,
                     eventType: "started" /* CiEventType.STARTED */,
                     startTime: startTime,
                     multiBranchType: "CHILD" /* MultiBranchType.CHILD */,
-                    parentCiId: `${jobCiIdPrefix}/${pipelineData.rootJobName}`,
+                    parentCiId: `${jobCiIdPrefix}`,
                     branch: branchName,
                     number: (runNumber === null || runNumber === void 0 ? void 0 : runNumber.toString()) || pipelineData.buildCiId,
                     skipValidation: true
@@ -98557,13 +98559,13 @@ const handleEvent = (event) => __awaiter(void 0, void 0, void 0, function* () {
                 pipelineData = yield new genericPoller_1.GenericPoller(() => (0, pipelineDataService_1.getPipelineData)(`${pipelineData.rootJobName}/${branchName}`, ciServer, event, false), 20, 2 * 1000).poll();
                 // await updateJobsIfNeeded(
                 //   getAllJobsByPipeline(pipelineData.pipelineId),
-                //   `${jobCiIdPrefix}/${pipelineData.rootJobName}/${branchName}`,
+                //   `${jobCiIdPrefix}/${branchName}`,
                 //   ciServer.id,
                 // )
             }
             const rootParentCauseData = {
                 isRoot: true,
-                jobName: `${jobCiIdPrefix}/${pipelineData.rootJobName}`,
+                jobName: `${jobCiIdPrefix}`,
                 causeType: (_g = event.workflow_run) === null || _g === void 0 ? void 0 : _g.event,
                 userId: (_h = event.workflow_run) === null || _h === void 0 ? void 0 : _h.triggering_actor.login,
                 userName: (_j = event.workflow_run) === null || _j === void 0 ? void 0 : _j.triggering_actor.login
@@ -98670,7 +98672,7 @@ const handleEvent = (event) => __awaiter(void 0, void 0, void 0, function* () {
                 const completedEvent = (0, ciEventsService_1.generateRootCiEvent)(event, pipelineData, "finished" /* CiEventType.FINISHED */, jobCiIdPrefix);
                 yield octaneClient_1.default.sendEvents([completedEvent], pipelineData.instanceId, pipelineData.baseUrl);
                 if ((0, config_1.getConfig)().unitTestResultsGlobPattern) {
-                    yield (0, testResultsService_1.sendJUnitTestResults)(owner, repoName, workflowRunId, pipelineData.buildCiId, `${jobCiIdPrefix}/${pipelineData.rootJobName}`, pipelineData.instanceId);
+                    yield (0, testResultsService_1.sendJUnitTestResults)(owner, repoName, workflowRunId, pipelineData.buildCiId, `${jobCiIdPrefix}`, pipelineData.instanceId);
                 }
             }
             break;
@@ -98857,14 +98859,14 @@ const generateRootCiEvent = (event, pipelineData, eventType, jobCiIdPrefix, scmD
         buildCiId: pipelineData.buildCiId,
         eventType,
         number: ((_b = (_a = event.workflow_run) === null || _a === void 0 ? void 0 : _a.run_number) === null || _b === void 0 ? void 0 : _b.toString()) || pipelineData.buildCiId,
-        project: `${jobCiIdPrefix}/${pipelineData.rootJobName}`,
+        project: `${jobCiIdPrefix}`,
         projectDisplayName: pipelineData.rootJobName,
         startTime: ((_c = event.workflow_run) === null || _c === void 0 ? void 0 : _c.run_started_at)
             ? new Date(event.workflow_run.run_started_at).getTime()
             : new Date().getTime(),
         causes: (0, eventCauseBuilder_1.getCiEventCauses)({
             isRoot: true,
-            jobName: `${jobCiIdPrefix}/${pipelineData.rootJobName}`,
+            jobName: `${jobCiIdPrefix}`,
             causeType: (_d = event.workflow_run) === null || _d === void 0 ? void 0 : _d.event,
             userId: (_e = event.workflow_run) === null || _e === void 0 ? void 0 : _e.triggering_actor.login,
             userName: (_f = event.workflow_run) === null || _f === void 0 ? void 0 : _f.triggering_actor.login
