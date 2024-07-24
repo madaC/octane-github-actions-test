@@ -99160,21 +99160,21 @@ exports.performMigrations = void 0;
 const octaneClient_1 = __importDefault(__nccwpck_require__(18607));
 const config_1 = __nccwpck_require__(84561);
 const pipelineDataService_1 = __nccwpck_require__(27726);
-const performMigrations = (event, newPipelineName, ciIdPrefix, ciServer) => __awaiter(void 0, void 0, void 0, function* () {
+const performMigrations = (event, pipelineName, ciIdPrefix, ciServer) => __awaiter(void 0, void 0, void 0, function* () {
     var _a;
     const workflowName = (_a = event.workflow) === null || _a === void 0 ? void 0 : _a.name;
     if (!workflowName) {
         return;
     }
-    yield performMultiBranchPipelineMigration(workflowName, ciIdPrefix, ciServer);
+    yield performMultiBranchPipelineMigration(pipelineName, workflowName, ciIdPrefix, ciServer);
     yield migrateCiServerIfNeeded();
 });
 exports.performMigrations = performMigrations;
-const performMultiBranchPipelineMigration = (workflowName, ciIdPrefix, ciServer) => __awaiter(void 0, void 0, void 0, function* () {
+const performMultiBranchPipelineMigration = (pipelineName, workflowName, ciIdPrefix, ciServer) => __awaiter(void 0, void 0, void 0, function* () {
     const config = (0, config_1.getConfig)();
     const sharedSpaceName = yield octaneClient_1.default.getSharedSpaceName(config.octaneSharedSpace);
-    const pipelineName = `GHA/${sharedSpaceName}/${workflowName}`;
-    yield (0, pipelineDataService_1.upgradePipelineToMultiBranchIfNeeded)(pipelineName, ciIdPrefix, ciServer);
+    const oldPipelineName = `GHA/${sharedSpaceName}/${workflowName}`;
+    yield (0, pipelineDataService_1.upgradePipelineToMultiBranchIfNeeded)(oldPipelineName, pipelineName, ciIdPrefix, ciServer);
 });
 const migrateCiServerIfNeeded = () => __awaiter(void 0, void 0, void 0, function* () {
     const oldCiServerInstanceId = `GHA/${(0, config_1.getConfig)().octaneSharedSpace}`;
@@ -99281,19 +99281,19 @@ const updatePipelineNameIfNeeded = (rootJobCiId, ciServer, pipelineName) => __aw
     const oldCiServerInstanceId = `GHA/${(0, config_1.getConfig)().octaneSharedSpace}`;
 });
 exports.updatePipelineNameIfNeeded = updatePipelineNameIfNeeded;
-const upgradePipelineToMultiBranchIfNeeded = (pipelineName, ciIdPrefix, ciServer) => __awaiter(void 0, void 0, void 0, function* () {
-    console.log(`Looking for pipeline '${pipelineName}'...`);
-    const pipeline = yield octaneClient_1.default.getPipelineByName(pipelineName);
+const upgradePipelineToMultiBranchIfNeeded = (oldPipelineName, newPipelineName, ciIdPrefix, ciServer) => __awaiter(void 0, void 0, void 0, function* () {
+    console.log(`Looking for pipeline '${oldPipelineName}'...`);
+    const pipeline = yield octaneClient_1.default.getPipelineByName(oldPipelineName);
     console.log(JSON.stringify(pipeline));
     if (!pipeline || pipeline.multi_branch_type !== null) {
         return;
     }
-    console.log(`Migrating '${pipelineName}' to multi-branch pipeline...`);
+    console.log(`Migrating '${oldPipelineName}' to multi-branch pipeline...`);
     const pipelineJobs = yield (0, ciJobService_1.getAllJobsByPipeline)(pipeline.id);
     yield (0, ciJobService_1.updateJobsIfNeeded)(pipelineJobs, ciIdPrefix, ciServer);
     const pipelineToUpdate = {
         id: pipeline.id,
-        name: pipeline.name,
+        name: newPipelineName,
         multi_branch_type: "PARENT" /* MultiBranchType.PARENT */
     };
     yield octaneClient_1.default.updatePipeline(pipelineToUpdate);
