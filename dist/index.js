@@ -98260,11 +98260,9 @@ OctaneClient.getPipelineByRootJobCiId = (rootJobCiId, ciServer) => __awaiter(voi
     }
     return pipelines.data[0];
 });
-OctaneClient.getPipelineByName = (pipelineName, ciServer) => __awaiter(void 0, void 0, void 0, function* () {
+OctaneClient.getPipelineByName = (pipelineName) => __awaiter(void 0, void 0, void 0, function* () {
     const pipelineQuery = query_1.default.field('name')
-        .equal(_a.escapeOctaneQueryValue(pipelineName))
-        .and(query_1.default.field('ci_server').equal(query_1.default.field('id').equal(ciServer.id)))
-        .build();
+        .equal(_a.escapeOctaneQueryValue(pipelineName)).build();
     const pipelines = yield _a.octane
         .get('pipelines')
         .fields('name', 'multi_branch_type')
@@ -99166,7 +99164,6 @@ const performMigrations = (event, newPipelineName, ciIdPrefix, ciServer) => __aw
     var _a;
     const workflowName = (_a = event.workflow) === null || _a === void 0 ? void 0 : _a.name;
     if (!workflowName) {
-        console.log(workflowName);
         return;
     }
     yield performMultiBranchPipelineMigration(workflowName, ciIdPrefix, ciServer);
@@ -99286,7 +99283,7 @@ const updatePipelineNameIfNeeded = (rootJobCiId, ciServer, pipelineName) => __aw
 exports.updatePipelineNameIfNeeded = updatePipelineNameIfNeeded;
 const upgradePipelineToMultiBranchIfNeeded = (pipelineName, ciIdPrefix, ciServer) => __awaiter(void 0, void 0, void 0, function* () {
     console.log(`Looking for pipeline '${pipelineName}'...`);
-    const pipeline = yield octaneClient_1.default.getPipelineByName(pipelineName, ciServer);
+    const pipeline = yield octaneClient_1.default.getPipelineByName(pipelineName);
     console.log(JSON.stringify(pipeline));
     if (!pipeline || pipeline.multi_branch_type !== "null" /* MultiBranchType.NONE */) {
         return;
