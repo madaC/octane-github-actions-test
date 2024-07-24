@@ -98327,8 +98327,8 @@ OctaneClient.updateCiJobs = (ciJobs, ciServerId, newCiServerId) => __awaiter(voi
     ciJobs.forEach((ciJob) => {
         requestPayload.push({
             'name': ciJob.name,
-            'jobId': ciJob.id,
-            'jobCiId': ciJob.ci_id,
+            'jobId': ciJob.jobId,
+            'jobCiId': ciJob.jobCiId,
             'ciServer': {
                 'id': newCiServerId ? newCiServerId : ciServerId
             }
@@ -99028,7 +99028,7 @@ const updateJobsIfNeeded = (jobs, ciIdPrefix, ciServer, newCiServerId) => __awai
         }
     });
     if (jobsToUpdate.length > 0) {
-        yield octaneClient_1.default.updateCiJobs(jobs, ciServer.id, newCiServerId);
+        yield octaneClient_1.default.updateCiJobs(jobsToUpdate, ciServer.id, newCiServerId);
     }
 });
 exports.updateJobsIfNeeded = updateJobsIfNeeded;
