@@ -98529,9 +98529,9 @@ const handleEvent = (event) => __awaiter(void 0, void 0, void 0, function* () {
             }
             const workflowFileName = (0, utils_1.extractWorkflowFileName)(workflowFilePath);
             console.log(workflowFileName);
+            const shortJobCiIdPrefix = `${owner}/${repoName}/${workflowFileName}`;
             const jobCiIdPrefix = isWorkflowQueued ?
-                `${owner}/${repoName}/${workflowFileName}` :
-                `${owner}/${repoName}/${workflowFileName}/${branchName}`;
+                shortJobCiIdPrefix : `${shortJobCiIdPrefix}/${branchName}`;
             const pipelineName = (0, pipelineDataService_1.getPipelineName)(event, owner, repoName, workflowFileName, eventType != "completed" /* ActionsEventType.WORKFLOW_FINISHED */, pipelineNamePattern);
             yield (0, pipelineDataService_1.updatePipelineNameIfNeeded)(`${jobCiIdPrefix}*`, ciServer, "");
             if (eventType == "requested" /* ActionsEventType.WORKFLOW_QUEUED */) {
@@ -98550,7 +98550,7 @@ const handleEvent = (event) => __awaiter(void 0, void 0, void 0, function* () {
                     eventType: "started" /* CiEventType.STARTED */,
                     startTime: startTime,
                     multiBranchType: "CHILD" /* MultiBranchType.CHILD */,
-                    parentCiId: `${jobCiIdPrefix}`,
+                    parentCiId: `${shortJobCiIdPrefix}`,
                     branch: branchName,
                     number: (runNumber === null || runNumber === void 0 ? void 0 : runNumber.toString()) || pipelineData.buildCiId,
                     skipValidation: true
