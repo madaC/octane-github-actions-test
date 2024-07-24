@@ -98525,6 +98525,7 @@ const handleEvent = (event) => __awaiter(void 0, void 0, void 0, function* () {
             const jobCiIdPrefix = `${owner}/${repoName}/${workflowFileName}`;
             const pipelineName = (0, pipelineDataService_1.getPipelineName)(event, owner, repoName, workflowFileName, eventType != "completed" /* ActionsEventType.WORKFLOW_FINISHED */, pipelineNamePattern);
             yield (0, pipelineDataService_1.updatePipelineNameIfNeeded)(`${jobCiIdPrefix}*`, ciServer, "");
+            yield (0, pipelineDataService_1.upgradePipelineToMultiBranchIfNeeded)(pipelineName, pipelineName, ciServer);
             let pipelineData = yield (0, pipelineDataService_1.getPipelineData)(pipelineName, ciServer, event, isWorkflowQueued, jobCiIdPrefix, jobs);
             if (isWorkflowStarted) {
                 const branchName = (_f = event.workflow_run) === null || _f === void 0 ? void 0 : _f.head_branch;
