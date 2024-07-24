@@ -98174,36 +98174,35 @@ OctaneClient.createCISever = (name, instanceId, url) => __awaiter(void 0, void 0
         .fields('instance_id')
         .execute()).data[0];
 });
-OctaneClient.createPipeline = (rootJobName, ciServer, jobCiIdPrefix, jobs) => __awaiter(void 0, void 0, void 0, function* () {
+OctaneClient.createPipeline = (pipelineName, ciServer, jobCiIdPrefix, jobs) => __awaiter(void 0, void 0, void 0, function* () {
     const pipelineJobs = jobs === null || jobs === void 0 ? void 0 : jobs.map(job => {
         const jobName = job.name;
-        const jobFullName = `${jobCiIdPrefix}/${rootJobName}/${jobName}`;
+        const jobFullName = `${jobCiIdPrefix}/${pipelineName}/${jobName}`;
         return {
             name: jobName,
             jobCiId: jobFullName
         };
     });
     pipelineJobs === null || pipelineJobs === void 0 ? void 0 : pipelineJobs.push({
-        name: rootJobName,
-        jobCiId: `${jobCiIdPrefix}/${rootJobName}`
+        name: pipelineName,
+        jobCiId: `${jobCiIdPrefix}/${pipelineName}`
     });
-    console.log(`Creating pipeline '${rootJobName}'...`);
-    console.log(`${JSON.stringify(pipelineJobs)}`);
+    console.log(`Creating pipeline '${pipelineName}'...`);
     return (yield _a.octane
         .create('pipelines', {
-        name: rootJobName,
+        name: pipelineName,
         ci_server: {
             type: 'ci_server',
             id: ciServer.id
         },
-        root_job_ci_id: `${jobCiIdPrefix}/${rootJobName}`,
+        root_job_ci_id: `${jobCiIdPrefix}/${pipelineName}`,
         jobs: pipelineJobs
     })
         .execute()).data[0];
 });
-OctaneClient.getPipelineOrCreate = (rootJobName, ciServer, createOnAbsence = false, jobCiIdPrefix, jobs) => __awaiter(void 0, void 0, void 0, function* () {
+OctaneClient.getPipelineOrCreate = (pipelineName, ciServer, createOnAbsence = false, jobCiIdPrefix, jobs) => __awaiter(void 0, void 0, void 0, function* () {
     const pipelineQuery = query_1.default.field('name')
-        .equal(_a.escapeOctaneQueryValue(rootJobName))
+        .equal(_a.escapeOctaneQueryValue(pipelineName))
         .and(query_1.default.field('ci_server').equal(query_1.default.field('id').equal(ciServer.id)))
         .build();
     const pipelines = yield _a.octane
@@ -98215,13 +98214,12 @@ OctaneClient.getPipelineOrCreate = (rootJobName, ciServer, createOnAbsence = fal
         pipelines.total_count === 0 ||
         pipelines.data.length === 0) {
         if (createOnAbsence) {
-            return yield _a.createPipeline(rootJobName, ciServer, jobCiIdPrefix, jobs);
+            return yield _a.createPipeline(pipelineName, ciServer, jobCiIdPrefix, jobs);
         }
         else {
-            throw new Error(`Pipeline '${rootJobName}' not found.`);
+            throw new Error(`Pipeline '${pipelineName}' not found.`);
         }
     }
-    console.log(`${JSON.stringify(pipelines)}`);
     return pipelines.data[0];
 });
 OctaneClient.getCiServerOrCreate = (instanceId, projectName, baseUri, createOnAbsence = false) => __awaiter(void 0, void 0, void 0, function* () {
@@ -98260,6 +98258,22 @@ OctaneClient.getPipelineByRootJobCiId = (rootJobCiId, ciServer) => __awaiter(voi
     if (!pipelines || pipelines.total_count === 0 || pipelines.data.length === 0) {
         return undefined;
     }
+    return pipelines.data[0];
+});
+OctaneClient.getPipelineByName = (pipelineName, ciServer) => __awaiter(void 0, void 0, void 0, function* () {
+    const pipelineQuery = query_1.default.field('name')
+        .equal(_a.escapeOctaneQueryValue(pipelineName))
+        .and(query_1.default.field('ci_server').equal(query_1.default.field('id').equal(ciServer.id)))
+        .build();
+    const pipelines = yield _a.octane
+        .get('pipelines')
+        .fields('name', 'ci_server', 'multi_branch_type')
+        .query(pipelineQuery)
+        .execute();
+    if (!pipelines || pipelines.total_count === 0 || pipelines.data.length === 0) {
+        return undefined;
+    }
+    console.log(`${JSON.stringify(pipelines)}`);
     return pipelines.data[0];
 });
 OctaneClient.getCiServer = (instanceId) => __awaiter(void 0, void 0, void 0, function* () {
@@ -99057,7 +99071,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.updatePipelineNameIfNeeded = exports.getPipelineData = exports.getPipelineName = void 0;
+exports.upgradePipelineToMultiBranchIfNeeded = exports.updatePipelineNameIfNeeded = exports.getPipelineData = exports.getPipelineName = void 0;
 const octaneClient_1 = __importDefault(__nccwpck_require__(18607));
 const config_1 = __nccwpck_require__(84561);
 const getPipelineName = (event, owner, repoName, workflowFileName, isParent, pattern) => {
@@ -99098,14 +99112,13 @@ const getPipelineData = (rootJobName, ciServer, event, createOnAbsence, jobCiIdP
 exports.getPipelineData = getPipelineData;
 const updatePipelineNameIfNeeded = (rootJobCiId, ciServer, pipelineName) => __awaiter(void 0, void 0, void 0, function* () {
     yield octaneClient_1.default.getPipelineByRootJobCiId(rootJobCiId, ciServer);
-    // const oldCiServerInstanceId = `GHA/${getConfig().octaneSharedSpace}`;
-    // const ciServer = await OctaneClient.getCiServer(oldCiServerInstanceId);
-    // if (!ciServer) {
-    //     return;
-    // }
-    // const parentPipeline = getPipelineData;
+    const oldCiServerInstanceId = `GHA/${(0, config_1.getConfig)().octaneSharedSpace}`;
 });
 exports.updatePipelineNameIfNeeded = updatePipelineNameIfNeeded;
+const upgradePipelineToMultiBranchIfNeeded = (oldPipelineName, newPipelineName, ciServer) => __awaiter(void 0, void 0, void 0, function* () {
+    const pipeline = octaneClient_1.default.getPipelineByName(oldPipelineName, ciServer);
+});
+exports.upgradePipelineToMultiBranchIfNeeded = upgradePipelineToMultiBranchIfNeeded;
 
 
 /***/ }),
