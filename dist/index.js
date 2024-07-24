@@ -98275,9 +98275,9 @@ OctaneClient.getPipelineByName = (pipelineName) => __awaiter(void 0, void 0, voi
 });
 OctaneClient.updatePipeline = (pipeline) => __awaiter(void 0, void 0, void 0, function* () {
     console.log(`Updating pipeline '${pipeline.name}'...`);
-    return (yield _a.octane
+    yield _a.octane
         .update('pipelines', pipeline)
-        .execute()).data[0];
+        .execute();
 });
 OctaneClient.getCiServer = (instanceId) => __awaiter(void 0, void 0, void 0, function* () {
     const ciServerQuery = query_1.default.field('instance_id')
@@ -99293,6 +99293,7 @@ const upgradePipelineToMultiBranchIfNeeded = (pipelineName, ciIdPrefix, ciServer
     yield (0, ciJobService_1.updateJobsIfNeeded)(pipelineJobs, ciIdPrefix, ciServer);
     const pipelineToUpdate = {
         id: pipeline.id,
+        name: pipeline.name,
         multi_branch_type: "PARENT" /* MultiBranchType.PARENT */
     };
     yield octaneClient_1.default.updatePipeline(pipelineToUpdate);
