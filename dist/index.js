@@ -99166,6 +99166,7 @@ const performMigrations = (event, newPipelineName, ciIdPrefix, ciServer) => __aw
     var _a;
     const workflowName = (_a = event.workflow) === null || _a === void 0 ? void 0 : _a.name;
     if (!workflowName) {
+        console.log(workflowName);
         return;
     }
     yield performMultiBranchPipelineMigration(workflowName, ciIdPrefix, ciServer);
