@@ -98555,6 +98555,7 @@ const handleEvent = (event) => __awaiter(void 0, void 0, void 0, function* () {
                     number: (runNumber === null || runNumber === void 0 ? void 0 : runNumber.toString()) || pipelineData.buildCiId,
                     skipValidation: true
                 };
+                console.log(`Child pipeline start ci event: ${ciStartedPipelineEvent}`);
                 yield octaneClient_1.default.sendEvents([ciStartedPipelineEvent], pipelineData.instanceId, pipelineData.baseUrl);
                 pipelineData = yield new genericPoller_1.GenericPoller(() => (0, pipelineDataService_1.getPipelineData)(`${pipelineData.rootJobName}/${branchName}`, ciServer, event, false), 20, 2 * 1000).poll();
                 // await updateJobsIfNeeded(
