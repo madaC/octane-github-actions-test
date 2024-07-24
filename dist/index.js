@@ -98267,13 +98267,12 @@ OctaneClient.getPipelineByName = (pipelineName, ciServer) => __awaiter(void 0, v
         .build();
     const pipelines = yield _a.octane
         .get('pipelines')
-        .fields('name', 'ci_server', 'multi_branch_type')
+        .fields('name', 'multi_branch_type')
         .query(pipelineQuery)
         .execute();
     if (!pipelines || pipelines.total_count === 0 || pipelines.data.length === 0) {
         return undefined;
     }
-    console.log(`${JSON.stringify(pipelines)}`);
     return pipelines.data[0];
 });
 OctaneClient.getCiServer = (instanceId) => __awaiter(void 0, void 0, void 0, function* () {
@@ -99117,7 +99116,12 @@ const updatePipelineNameIfNeeded = (rootJobCiId, ciServer, pipelineName) => __aw
 });
 exports.updatePipelineNameIfNeeded = updatePipelineNameIfNeeded;
 const upgradePipelineToMultiBranchIfNeeded = (oldPipelineName, newPipelineName, ciServer) => __awaiter(void 0, void 0, void 0, function* () {
-    const pipeline = octaneClient_1.default.getPipelineByName(oldPipelineName, ciServer);
+    const pipeline = yield octaneClient_1.default.getPipelineByName(oldPipelineName, ciServer);
+    console.log(JSON.stringify(pipeline));
+    if (!pipeline || pipeline.multi_branch_type !== "null" /* MultiBranchType.NONE */) {
+        return;
+    }
+    console.log(`Migrating '${oldPipelineName}' to multi-branch pipeline...`);
 });
 exports.upgradePipelineToMultiBranchIfNeeded = upgradePipelineToMultiBranchIfNeeded;
 
