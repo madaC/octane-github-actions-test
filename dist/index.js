@@ -98138,6 +98138,7 @@ OctaneClient.octane = new alm_octane_js_rest_sdk_1.Octane({
         'ALM-OCTANE-TECH-PREVIEW': true
     }
 });
+OctaneClient.ANALYTICS_WORKSPACE_CI_INTERNAL_API_URL = `/internal-api/shared_spaces/${_a.config.octaneSharedSpace}/workspaces/${_a.config.octaneWorkspace}/analytics/ci`;
 OctaneClient.ANALYTICS_CI_INTERNAL_API_URL = `/internal-api/shared_spaces/${_a.config.octaneSharedSpace}/analytics/ci`;
 OctaneClient.ANALYTICS_CI_API_URL = `/api/shared_spaces/${_a.config.octaneSharedSpace}/workspaces/${_a.config.octaneWorkspace}/analytics/ci`;
 OctaneClient.setAnalyticsSharedSpace = (sharedSpace) => {
@@ -98330,13 +98331,13 @@ OctaneClient.updateCiJobs = (ciJobs, ciServerId, newCiServerId) => __awaiter(voi
             'jobId': ciJob.jobId,
             'jobCiId': ciJob.jobCiId,
             'ciServer': {
-                'id': newCiServerId ? newCiServerId : ciServerId
+                'id': newCiServerId
             }
         });
     });
     console.log(`Jobs update (${ciServerId}): ${JSON.stringify(requestPayload)}`);
     if (requestPayload.length > 0) {
-        const url = _a.ANALYTICS_CI_INTERNAL_API_URL + '/ci_job_update?ci-server-id=' + ciServerId;
+        const url = `${_a.ANALYTICS_WORKSPACE_CI_INTERNAL_API_URL}/ci_job_update?ci-server-id=${ciServerId}`;
         yield _a.octane.update(url, requestPayload);
     }
 });
