@@ -99182,7 +99182,7 @@ const performMigrations = (event, pipelineName, ciIdPrefix, ciServer) => __await
         return;
     }
     yield performMultiBranchPipelineMigration(pipelineName, workflowName, ciIdPrefix, ciServer);
-    yield migrateCiServerIfNeeded();
+    yield performCiServerMigration(ciServer, pipelineName);
 });
 exports.performMigrations = performMigrations;
 const performMultiBranchPipelineMigration = (pipelineName, workflowName, ciIdPrefix, ciServer) => __awaiter(void 0, void 0, void 0, function* () {
@@ -99191,15 +99191,23 @@ const performMultiBranchPipelineMigration = (pipelineName, workflowName, ciIdPre
     const oldPipelineName = `GHA/${sharedSpaceName}/${workflowName}`;
     yield (0, pipelineDataService_1.upgradePipelineToMultiBranchIfNeeded)(oldPipelineName, pipelineName, ciIdPrefix, ciServer);
 });
-const migrateCiServerIfNeeded = () => __awaiter(void 0, void 0, void 0, function* () {
+const performCiServerMigration = (newCiServer, pipelineName) => __awaiter(void 0, void 0, void 0, function* () {
     const oldCiServerInstanceId = `GHA/${(0, config_1.getConfig)().octaneSharedSpace}`;
-    const ciServer = yield octaneClient_1.default.getCiServer(oldCiServerInstanceId);
-    if (!ciServer) {
+    const oldCiServer = yield octaneClient_1.default.getCiServer(oldCiServerInstanceId);
+    if (!oldCiServer) {
         return;
     }
+    const pipeline = yield octaneClient_1.default.getPipelineByName(pipelineName);
+    if (!pipeline) {
+        return;
+    }
+    if (shouldMigrateCiServer(newCiServer, oldCiServer, pipeline)) {
+        pipelineDataService_1.updatePipelineNameIfNeeded;
+    }
 });
-const checkForCiServerMigration = (oldCiServerInstanceId) => {
-    return true;
+const shouldMigrateCiServer = (newCiServer, oldCiServer, pipeline) => {
+    return newCiServer.instance_id != oldCiServer.instance_id &&
+        oldCiServer === pipeline.ci_server;
 };
 
 
@@ -99282,6 +99290,9 @@ const getPipelineData = (rootJobName, ciServer, event, createOnAbsence, jobCiIdP
     if (!buildCiId) {
         throw new Error('Event should contain workflow run data!');
     }
+    if (!ciServer.instance_id) {
+        throw new Error('Could not find the instance ID of the CI Server!');
+    }
     return {
         pipelineId: pipeline.id,
         instanceId: ciServer.instance_id,
@@ -99291,6 +99302,15 @@ const getPipelineData = (rootJobName, ciServer, event, createOnAbsence, jobCiIdP
     };
 });
 exports.getPipelineData = getPipelineData;
+const updatePipeline = (pipeline) => __awaiter(void 0, void 0, void 0, function* () {
+    yield octaneClient_1.default.updatePipeline({
+        id: pipeline.id,
+        ciServer: {
+            type: "ci_server",
+            id: pipeline.ci_server.id
+        }
+    });
+});
 const updatePipelineNameIfNeeded = (rootJobCiId, ciServer, pipelineName) => __awaiter(void 0, void 0, void 0, function* () {
     yield octaneClient_1.default.getPipelineByRootJobCiId(rootJobCiId, ciServer);
     const oldCiServerInstanceId = `GHA/${(0, config_1.getConfig)().octaneSharedSpace}`;
