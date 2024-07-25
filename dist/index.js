@@ -99202,6 +99202,7 @@ const performCiServerMigration = (newCiServer, pipelineName) => __awaiter(void 0
         return;
     }
     if (shouldMigrateCiServer(newCiServer, oldCiServer, pipeline)) {
+        console.log(`Migrating CI Server '${oldCiServer.instance_id}' to '${newCiServer.instance_id}'...`);
         pipeline.ci_server.id = newCiServer.id;
         pipeline.ci_server.instance_id = newCiServer.instance_id;
         (0, pipelineDataService_1.updatePipeline)(pipeline);
