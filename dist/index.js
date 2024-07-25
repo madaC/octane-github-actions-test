@@ -99027,8 +99027,9 @@ const updateJobsIfNeeded = (jobs, ciIdPrefix, ciServer, newCiServerId) => __awai
             });
         }
     });
+    const jobsCiServerId = newCiServerId ? newCiServerId : ciServer.id;
     if (jobsToUpdate.length > 0) {
-        yield octaneClient_1.default.updateCiJobs(jobsToUpdate, ciServer.id, newCiServerId);
+        yield octaneClient_1.default.updateCiJobs(jobsToUpdate, ciServer.id, jobsCiServerId);
     }
 });
 exports.updateJobsIfNeeded = updateJobsIfNeeded;
@@ -99294,7 +99295,7 @@ const upgradePipelineToMultiBranchIfNeeded = (oldPipelineName, newPipelineName, 
     }
     console.log(`Migrating '${oldPipelineName}' to multi-branch pipeline...`);
     const pipelineJobs = yield (0, ciJobService_1.getAllJobsByPipeline)(pipeline.id);
-    yield (0, ciJobService_1.updateJobsIfNeeded)(pipelineJobs, ciIdPrefix, ciServer);
+    yield (0, ciJobService_1.updateJobsIfNeeded)(pipelineJobs, ciIdPrefix, pipeline.ci_server);
     const pipelineToUpdate = {
         id: pipeline.id,
         name: newPipelineName,
