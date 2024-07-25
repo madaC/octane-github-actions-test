@@ -99017,15 +99017,24 @@ const getAllJobsByPipeline = (pipelineId) => __awaiter(void 0, void 0, void 0, f
     return yield octaneClient_1.default.getAllJobsByPipeline(pipelineId);
 });
 exports.getAllJobsByPipeline = getAllJobsByPipeline;
-const updateJobsIfNeeded = (jobs, ciIdPrefix, ciServer, newCiServerId) => __awaiter(void 0, void 0, void 0, function* () {
+const updateJobsIfNeeded = (jobs, ciIdPrefix, ciServer, oldPipelineName, newPipelineName, newCiServerId) => __awaiter(void 0, void 0, void 0, function* () {
     const jobsToUpdate = [];
     jobs.forEach((ciJob) => {
         if (checkIfNeedsUpdate(ciJob, ciIdPrefix)) {
-            jobsToUpdate.push({
-                jobId: ciJob.id,
-                name: ciJob.name,
-                jobCiId: `${ciIdPrefix}/${ciJob.name}`
-            });
+            if (ciJob.name === oldPipelineName) {
+                jobsToUpdate.push({
+                    jobId: ciJob.id,
+                    name: newPipelineName,
+                    jobCiId: `${ciIdPrefix}`
+                });
+            }
+            else {
+                jobsToUpdate.push({
+                    jobId: ciJob.id,
+                    name: ciJob.name,
+                    jobCiId: `${ciIdPrefix}/${ciJob.name}`
+                });
+            }
         }
     });
     const jobsCiServerId = newCiServerId ? newCiServerId : ciServer.id;
@@ -99296,7 +99305,7 @@ const upgradePipelineToMultiBranchIfNeeded = (oldPipelineName, newPipelineName, 
     }
     console.log(`Migrating '${oldPipelineName}' to multi-branch pipeline...`);
     const pipelineJobs = yield (0, ciJobService_1.getAllJobsByPipeline)(pipeline.id);
-    yield (0, ciJobService_1.updateJobsIfNeeded)(pipelineJobs, ciIdPrefix, pipeline.ci_server);
+    yield (0, ciJobService_1.updateJobsIfNeeded)(pipelineJobs, ciIdPrefix, pipeline.ci_server, oldPipelineName, newPipelineName);
     const pipelineToUpdate = {
         id: pipeline.id,
         name: newPipelineName,
