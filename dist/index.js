@@ -99049,7 +99049,9 @@ const updateJobsCiServerIfNeeded = (jobs, oldCiServerId, newCiServerId) => __awa
     if (checkIfNeedsCiServerUpdate(oldCiServerId, newCiServerId)) {
         jobs.forEach((ciJob) => {
             jobsToUpdate.push({
-                jobId: ciJob.id
+                jobId: ciJob.id,
+                name: ciJob.name,
+                jobCiId: ciJob.ci_id
             });
         });
     }
