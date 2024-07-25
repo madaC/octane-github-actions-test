@@ -99308,7 +99308,7 @@ exports.getPipelineData = getPipelineData;
 const updatePipeline = (pipeline) => __awaiter(void 0, void 0, void 0, function* () {
     yield octaneClient_1.default.updatePipeline({
         id: pipeline.id,
-        ciServer: {
+        ci_server: {
             type: "ci_server",
             id: pipeline.ci_server.id
         }
