@@ -98338,7 +98338,7 @@ OctaneClient.updateCiJobs = (ciJobs, ciServerId, newCiServerId) => __awaiter(voi
     console.log(`Jobs update (${ciServerId}): ${JSON.stringify(requestPayload)}`);
     if (requestPayload.length > 0) {
         const url = `${_a.ANALYTICS_WORKSPACE_CI_INTERNAL_API_URL}/ci_job_update?ci-server-id=${ciServerId}`;
-        yield _a.octane.update(url, requestPayload).execute();
+        yield _a.octane.executeCustomRequest(url, alm_octane_js_rest_sdk_1.Octane.operationTypes.update, requestPayload);
     }
 });
 OctaneClient.updatePluginVersionIfNeeded = (instanceId, ciServer) => __awaiter(void 0, void 0, void 0, function* () {
