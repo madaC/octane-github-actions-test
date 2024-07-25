@@ -99202,7 +99202,9 @@ const performCiServerMigration = (newCiServer, pipelineName) => __awaiter(void 0
         return;
     }
     if (shouldMigrateCiServer(newCiServer, oldCiServer, pipeline)) {
-        pipelineDataService_1.updatePipelineNameIfNeeded;
+        pipeline.ci_server.id = newCiServer.id;
+        pipeline.ci_server.instance_id = newCiServer.instance_id;
+        (0, pipelineDataService_1.updatePipeline)(pipeline);
     }
 });
 const shouldMigrateCiServer = (newCiServer, oldCiServer, pipeline) => {
@@ -99259,7 +99261,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.upgradePipelineToMultiBranchIfNeeded = exports.updatePipelineNameIfNeeded = exports.getPipelineData = exports.getPipelineName = void 0;
+exports.upgradePipelineToMultiBranchIfNeeded = exports.updatePipelineNameIfNeeded = exports.updatePipeline = exports.getPipelineData = exports.getPipelineName = void 0;
 const octaneClient_1 = __importDefault(__nccwpck_require__(18607));
 const config_1 = __nccwpck_require__(84561);
 const ciJobService_1 = __nccwpck_require__(48530);
@@ -99311,6 +99313,7 @@ const updatePipeline = (pipeline) => __awaiter(void 0, void 0, void 0, function*
         }
     });
 });
+exports.updatePipeline = updatePipeline;
 const updatePipelineNameIfNeeded = (rootJobCiId, ciServer, pipelineName) => __awaiter(void 0, void 0, void 0, function* () {
     yield octaneClient_1.default.getPipelineByRootJobCiId(rootJobCiId, ciServer);
     const oldCiServerInstanceId = `GHA/${(0, config_1.getConfig)().octaneSharedSpace}`;
