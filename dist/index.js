@@ -98275,7 +98275,7 @@ OctaneClient.getPipelineByName = (pipelineName) => __awaiter(void 0, void 0, voi
     return pipelines.data[0];
 });
 OctaneClient.updatePipeline = (pipeline) => __awaiter(void 0, void 0, void 0, function* () {
-    console.log(`Updating pipeline '${pipeline.name}'...`);
+    console.log(`Updating pipeline '${JSON.stringify(pipeline)}'...`);
     yield _a.octane
         .update('pipelines', pipeline)
         .execute();
