@@ -98265,7 +98265,7 @@ OctaneClient.getPipelineByName = (pipelineName) => __awaiter(void 0, void 0, voi
         .equal(_a.escapeOctaneQueryValue(pipelineName)).build();
     const pipelines = yield _a.octane
         .get('pipelines')
-        .fields('name', 'multi_branch_type')
+        .fields('name', 'ci_server{instance_id}', 'multi_branch_type')
         .query(pipelineQuery)
         .execute();
     if (!pipelines || pipelines.total_count === 0 || pipelines.data.length === 0) {
