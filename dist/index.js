@@ -99010,16 +99010,16 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.updateJobsIfNeeded = exports.getAllJobsByPipeline = void 0;
+exports.updateJobsCiServerIfNeeded = exports.updateJobsCiIdIfNeeded = exports.getAllJobsByPipeline = void 0;
 const octaneClient_1 = __importDefault(__nccwpck_require__(18607));
 const getAllJobsByPipeline = (pipelineId) => __awaiter(void 0, void 0, void 0, function* () {
     return yield octaneClient_1.default.getAllJobsByPipeline(pipelineId);
 });
 exports.getAllJobsByPipeline = getAllJobsByPipeline;
-const updateJobsIfNeeded = (jobs, ciIdPrefix, ciServer, oldPipelineName, newPipelineName, newCiServerId) => __awaiter(void 0, void 0, void 0, function* () {
+const updateJobsCiIdIfNeeded = (jobs, ciIdPrefix, ciServer, oldPipelineName, newPipelineName) => __awaiter(void 0, void 0, void 0, function* () {
     const jobsToUpdate = [];
     jobs.forEach((ciJob) => {
-        if (checkIfNeedsUpdate(ciJob, ciIdPrefix)) {
+        if (checkIfNeedsCiIdUpdate(ciJob, ciIdPrefix)) {
             if (ciJob.name === oldPipelineName) {
                 jobsToUpdate.push({
                     jobId: ciJob.id,
@@ -99036,17 +99036,39 @@ const updateJobsIfNeeded = (jobs, ciIdPrefix, ciServer, oldPipelineName, newPipe
             }
         }
     });
-    const jobsCiServerId = newCiServerId ? newCiServerId : ciServer.id;
     if (jobsToUpdate.length > 0) {
-        yield octaneClient_1.default.updateCiJobs(jobsToUpdate, ciServer.id, jobsCiServerId);
+        yield octaneClient_1.default.updateCiJobs(jobsToUpdate, ciServer.id, ciServer.id);
     }
 });
-exports.updateJobsIfNeeded = updateJobsIfNeeded;
-const checkIfNeedsUpdate = (ciJob, ciIdPrefix) => {
+exports.updateJobsCiIdIfNeeded = updateJobsCiIdIfNeeded;
+const updateJobsCiServerIfNeeded = (jobs, oldCiServerId, newCiServerId) => __awaiter(void 0, void 0, void 0, function* () {
+    if (!newCiServerId) {
+        return;
+    }
+    const jobsToUpdate = [];
+    if (checkIfNeedsCiServerUpdate(oldCiServerId, newCiServerId)) {
+        jobs.forEach((ciJob) => {
+            jobsToUpdate.push({
+                jobId: ciJob.id
+            });
+        });
+    }
+    if (jobsToUpdate.length > 0) {
+        yield octaneClient_1.default.updateCiJobs(jobsToUpdate, oldCiServerId, newCiServerId);
+    }
+});
+exports.updateJobsCiServerIfNeeded = updateJobsCiServerIfNeeded;
+const checkIfNeedsCiIdUpdate = (ciJob, ciIdPrefix) => {
     if (!ciJob || !ciJob.ci_id || !ciJob.name) {
         return false;
     }
     return !ciJob.ci_id.startsWith(ciIdPrefix);
+};
+const checkIfNeedsCiServerUpdate = (oldCiServerId, newCiServerId) => {
+    if (!oldCiServerId || !newCiServerId) {
+        return false;
+    }
+    return oldCiServerId !== newCiServerId;
 };
 
 
@@ -99173,6 +99195,7 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.performMigrations = void 0;
 const octaneClient_1 = __importDefault(__nccwpck_require__(18607));
 const config_1 = __nccwpck_require__(84561);
+const ciJobService_1 = __nccwpck_require__(48530);
 const pipelineDataService_1 = __nccwpck_require__(27726);
 const performMigrations = (event, pipelineName, ciIdPrefix, ciServer) => __awaiter(void 0, void 0, void 0, function* () {
     var _a;
@@ -99205,6 +99228,7 @@ const performCiServerMigration = (newCiServer, pipelineName) => __awaiter(void 0
         pipeline.ci_server.id = newCiServer.id;
         pipeline.ci_server.instance_id = newCiServer.instance_id;
         yield (0, pipelineDataService_1.updatePipeline)(pipeline);
+        yield (0, ciJobService_1.updateJobsCiServerIfNeeded)(yield (0, ciJobService_1.getAllJobsByPipeline)(pipeline.id), oldCiServer.id, newCiServer.id);
     }
 });
 const shouldMigrateCiServer = (newCiServer, oldCiServer, pipeline) => {
@@ -99329,7 +99353,7 @@ const upgradePipelineToMultiBranchIfNeeded = (oldPipelineName, newPipelineName, 
     }
     console.log(`Migrating '${oldPipelineName}' to multi-branch pipeline...`);
     const pipelineJobs = yield (0, ciJobService_1.getAllJobsByPipeline)(pipeline.id);
-    yield (0, ciJobService_1.updateJobsIfNeeded)(pipelineJobs, ciIdPrefix, pipeline.ci_server, oldPipelineName, newPipelineName);
+    yield (0, ciJobService_1.updateJobsCiIdIfNeeded)(pipelineJobs, ciIdPrefix, pipeline.ci_server, oldPipelineName, newPipelineName);
     const pipelineToUpdate = {
         id: pipeline.id,
         name: newPipelineName,
