@@ -98335,7 +98335,6 @@ OctaneClient.updateCiJobs = (ciJobs, ciServerId, newCiServerId) => __awaiter(voi
             }
         });
     });
-    console.log(`Jobs update (${ciServerId}): ${JSON.stringify(requestPayload)}`);
     if (requestPayload.length > 0) {
         const url = `${_a.ANALYTICS_WORKSPACE_CI_INTERNAL_API_URL}/ci_job_update?ci-server-id=${ciServerId}`;
         yield _a.octane.executeCustomRequest(url, alm_octane_js_rest_sdk_1.Octane.operationTypes.update, requestPayload);
@@ -99205,12 +99204,13 @@ const performCiServerMigration = (newCiServer, pipelineName) => __awaiter(void 0
         console.log(`Migrating CI Server '${oldCiServer.instance_id}' to '${newCiServer.instance_id}'...`);
         pipeline.ci_server.id = newCiServer.id;
         pipeline.ci_server.instance_id = newCiServer.instance_id;
-        (0, pipelineDataService_1.updatePipeline)(pipeline);
+        yield (0, pipelineDataService_1.updatePipeline)(pipeline);
     }
 });
 const shouldMigrateCiServer = (newCiServer, oldCiServer, pipeline) => {
+    console.log(`Instance ID: ${newCiServer.instance_id} vs ${oldCiServer.instance_id}; CI Server ID: ${pipeline.ci_server.id} vs ${oldCiServer.id}`);
     return newCiServer.instance_id != oldCiServer.instance_id &&
-        oldCiServer === pipeline.ci_server;
+        oldCiServer.id === pipeline.ci_server.id;
 };
 
 
