@@ -98259,7 +98259,7 @@ OctaneClient.getPipelineByRootJobCiId = (rootJobCiId, ciServer) => __awaiter(voi
     if (!pipelines || pipelines.total_count === 0 || pipelines.data.length === 0) {
         return undefined;
     }
-    return pipelines.data[0];
+    return pipelines.data;
 });
 OctaneClient.getPipelineByName = (pipelineName) => __awaiter(void 0, void 0, void 0, function* () {
     const pipelineQuery = query_1.default.field('name')
@@ -98525,19 +98525,17 @@ const handleEvent = (event) => __awaiter(void 0, void 0, void 0, function* () {
             const ciServerInstanceId = `GHA/${owner}`;
             console.log('Getting CI Server...');
             const ciServer = yield octaneClient_1.default.getCiServerOrCreate(ciServerInstanceId, ciServerInstanceId, baseUrl, isWorkflowQueued);
-            console.log(`${JSON.stringify(ciServer)}`);
             if (isWorkflowQueued) {
                 yield octaneClient_1.default.updatePluginVersionIfNeeded(owner, ciServer);
             }
             const workflowFileName = (0, utils_1.extractWorkflowFileName)(workflowFilePath);
-            console.log(workflowFileName);
             const shortJobCiIdPrefix = `${owner}/${repoName}/${workflowFileName}`;
             const jobCiIdPrefix = isWorkflowQueued ?
                 shortJobCiIdPrefix : `${shortJobCiIdPrefix}/${branchName}`;
             const pipelineName = (0, pipelineDataService_1.getPipelineName)(event, owner, repoName, workflowFileName, eventType != "completed" /* ActionsEventType.WORKFLOW_FINISHED */, pipelineNamePattern);
-            yield (0, pipelineDataService_1.updatePipelineNameIfNeeded)(`${jobCiIdPrefix}*`, ciServer, "");
             if (isWorkflowQueued) {
                 yield (0, migrationService_1.performMigrations)(event, pipelineName, shortJobCiIdPrefix, ciServer);
+                yield (0, pipelineDataService_1.updatePipelineNameIfNeeded)(`${jobCiIdPrefix}*`, ciServer, pipelineName);
             }
             let pipelineData = yield (0, pipelineDataService_1.getPipelineData)(pipelineName, ciServer, event, isWorkflowQueued, jobCiIdPrefix, jobs);
             if (isWorkflowStarted) {
@@ -99343,8 +99341,21 @@ const updatePipeline = (pipeline) => __awaiter(void 0, void 0, void 0, function*
 });
 exports.updatePipeline = updatePipeline;
 const updatePipelineNameIfNeeded = (rootJobCiId, ciServer, pipelineName) => __awaiter(void 0, void 0, void 0, function* () {
-    yield octaneClient_1.default.getPipelineByRootJobCiId(rootJobCiId, ciServer);
-    const oldCiServerInstanceId = `GHA/${(0, config_1.getConfig)().octaneSharedSpace}`;
+    const pipelines = yield octaneClient_1.default.getPipelineByRootJobCiId(rootJobCiId, ciServer);
+    if (!pipelines) {
+        return;
+    }
+    yield Promise.all(pipelines.map((pipeline) => __awaiter(void 0, void 0, void 0, function* () {
+        const nameTokens = pipeline.name.split('/');
+        if (pipeline.name !== pipelineName && nameTokens[0] !== pipelineName) {
+            const fullPipelineName = nameTokens.length === 2 ? `${pipelineName}/${nameTokens[1]}` : pipelineName;
+            console.log(`Renaming '${pipeline.name}' to '${fullPipelineName}'`);
+            yield octaneClient_1.default.updatePipeline({
+                'id': pipeline.id,
+                'name': fullPipelineName
+            });
+        }
+    })));
 });
 exports.updatePipelineNameIfNeeded = updatePipelineNameIfNeeded;
 const upgradePipelineToMultiBranchIfNeeded = (oldPipelineName, newPipelineName, ciIdPrefix) => __awaiter(void 0, void 0, void 0, function* () {
