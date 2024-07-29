@@ -98254,8 +98254,6 @@ OctaneClient.getPipelineByRootJobCiId = (rootJobCiId, ciServer) => __awaiter(voi
         .fields('name', 'ci_server{instance_id}')
         .query(pipelineQuery)
         .execute();
-    console.log(`Query: ${pipelineQuery}`);
-    console.log(`Found pipelines (ci_id='${rootJobCiId}';ci_server_id='${ciServer.id}'): ${JSON.stringify(pipelines)}`);
     if (!pipelines || pipelines.total_count === 0 || pipelines.data.length === 0) {
         return undefined;
     }
@@ -98583,7 +98581,6 @@ const handleEvent = (event) => __awaiter(void 0, void 0, void 0, function* () {
                         done = allStepsFinished;
                         const job = yield githubClient_1.default.getJob(owner, repoName, jobId);
                         let ciJobEvent = (0, ciEventsService_1.mapPipelineComponentToCiEvent)(job, rootParentCauseData, pipelineData.buildCiId, allStepsFinished, runNumber);
-                        console.log(`CI Job event: ${JSON.stringify(ciJobEvent)}`);
                         if (!alreadySentStartedEvent ||
                             ciJobEvent.eventType == "finished" /* CiEventType.FINISHED */) {
                             yield octaneClient_1.default.sendEvents([ciJobEvent], pipelineData.instanceId, pipelineData.baseUrl);
@@ -98600,7 +98597,6 @@ const handleEvent = (event) => __awaiter(void 0, void 0, void 0, function* () {
                                 jobName: `${rootParentCauseData.jobName}/${job.name}`,
                                 parentJobData: rootParentCauseData
                             }, pipelineData.buildCiId, true, runNumber);
-                            console.log(`CI Step event: ${JSON.stringify(stepCiEvent)}`);
                             if (!stepsStarted.has(step.number) &&
                                 stepCiEvent.eventType == "finished" /* CiEventType.FINISHED */) {
                                 yield octaneClient_1.default.sendEvents([Object.assign(Object.assign({}, stepCiEvent), { eventType: "started" /* CiEventType.STARTED */ })], pipelineData.instanceId, pipelineData.baseUrl);
@@ -99239,7 +99235,6 @@ const performCiServerMigration = (newCiServer, pipelineName) => __awaiter(void 0
     }
 });
 const shouldMigrateCiServer = (newCiServer, oldCiServer, pipeline) => {
-    console.log(`Instance ID: ${newCiServer.instance_id} vs ${oldCiServer.instance_id}; CI Server ID: ${pipeline.ci_server.id} vs ${oldCiServer.id}`);
     return newCiServer.instance_id != oldCiServer.instance_id &&
         oldCiServer.id === pipeline.ci_server.id;
 };
@@ -99359,7 +99354,6 @@ const updatePipelineNameIfNeeded = (rootJobCiId, ciServer, pipelineName) => __aw
 });
 exports.updatePipelineNameIfNeeded = updatePipelineNameIfNeeded;
 const upgradePipelineToMultiBranchIfNeeded = (oldPipelineName, newPipelineName, ciIdPrefix) => __awaiter(void 0, void 0, void 0, function* () {
-    console.log(`Looking for pipeline '${oldPipelineName}'...`);
     const pipeline = yield octaneClient_1.default.getPipelineByName(oldPipelineName);
     if (!pipeline || pipeline.multi_branch_type !== null) {
         return;
