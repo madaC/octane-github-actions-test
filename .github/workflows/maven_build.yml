@@ -1,4 +1,4 @@
-name: Build and Test Project
+name: NEW Java CI with Maven
 
 on:
   workflow_dispatch:
