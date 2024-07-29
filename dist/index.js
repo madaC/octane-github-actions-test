@@ -98275,10 +98275,13 @@ OctaneClient.getPipelineByName = (pipelineName) => __awaiter(void 0, void 0, voi
     return pipelines.data[0];
 });
 OctaneClient.updatePipeline = (pipeline) => __awaiter(void 0, void 0, void 0, function* () {
-    console.log(`Updating pipeline '${JSON.stringify(pipeline)}'...`);
     yield _a.octane
         .update('pipelines', pipeline)
         .execute();
+});
+OctaneClient.updatePipelineInternal = (pipeline) => __awaiter(void 0, void 0, void 0, function* () {
+    const url = `${_a.ANALYTICS_WORKSPACE_CI_INTERNAL_API_URL}/pipeline_update`;
+    yield _a.octane.executeCustomRequest(url, alm_octane_js_rest_sdk_1.Octane.operationTypes.update, pipeline);
 });
 OctaneClient.getCiServer = (instanceId) => __awaiter(void 0, void 0, void 0, function* () {
     const ciServerQuery = query_1.default.field('instance_id')
@@ -98335,7 +98338,6 @@ OctaneClient.updateCiJobs = (ciJobs, ciServerId, newCiServerId) => __awaiter(voi
             }
         });
     });
-    console.log(`Jobs to update for CI Server (${ciServerId}): ${JSON.stringify(requestPayload)}`);
     if (requestPayload.length > 0) {
         const url = `${_a.ANALYTICS_WORKSPACE_CI_INTERNAL_API_URL}/ci_job_update?ci-server-id=${ciServerId}`;
         yield _a.octane.executeCustomRequest(url, alm_octane_js_rest_sdk_1.Octane.operationTypes.update, requestPayload);
@@ -99214,7 +99216,7 @@ const performMultiBranchPipelineMigration = (pipelineName, workflowName, ciIdPre
     const config = (0, config_1.getConfig)();
     const sharedSpaceName = yield octaneClient_1.default.getSharedSpaceName(config.octaneSharedSpace);
     const oldPipelineName = `GHA/${sharedSpaceName}/${workflowName}`;
-    yield (0, pipelineDataService_1.upgradePipelineToMultiBranchIfNeeded)(oldPipelineName, pipelineName, ciIdPrefix, ciServer);
+    yield (0, pipelineDataService_1.upgradePipelineToMultiBranchIfNeeded)(oldPipelineName, pipelineName, ciIdPrefix);
 });
 const performCiServerMigration = (newCiServer, pipelineName) => __awaiter(void 0, void 0, void 0, function* () {
     const oldCiServerInstanceId = `GHA/${(0, config_1.getConfig)().octaneSharedSpace}`;
@@ -99228,9 +99230,13 @@ const performCiServerMigration = (newCiServer, pipelineName) => __awaiter(void 0
     }
     if (shouldMigrateCiServer(newCiServer, oldCiServer, pipeline)) {
         console.log(`Migrating CI Server '${oldCiServer.instance_id}' to '${newCiServer.instance_id}'...`);
-        pipeline.ci_server.id = newCiServer.id;
-        pipeline.ci_server.instance_id = newCiServer.instance_id;
-        yield (0, pipelineDataService_1.updatePipeline)(pipeline);
+        yield (0, pipelineDataService_1.updatePipeline)({
+            'id': pipeline.id,
+            'ciServer': {
+                'type': 'ci_server',
+                'id': newCiServer.id
+            }
+        });
         yield (0, ciJobService_1.updateJobsCiServerIfNeeded)(yield (0, ciJobService_1.getAllJobsByPipeline)(pipeline.id), oldCiServer.id, newCiServer.id);
     }
 });
@@ -99333,10 +99339,7 @@ const getPipelineData = (rootJobName, ciServer, event, createOnAbsence, jobCiIdP
 });
 exports.getPipelineData = getPipelineData;
 const updatePipeline = (pipeline) => __awaiter(void 0, void 0, void 0, function* () {
-    yield octaneClient_1.default.updatePipeline({
-        id: pipeline.id,
-        server_ci_id: pipeline.ci_server.id
-    });
+    yield octaneClient_1.default.updatePipelineInternal(pipeline);
 });
 exports.updatePipeline = updatePipeline;
 const updatePipelineNameIfNeeded = (rootJobCiId, ciServer, pipelineName) => __awaiter(void 0, void 0, void 0, function* () {
@@ -99344,10 +99347,9 @@ const updatePipelineNameIfNeeded = (rootJobCiId, ciServer, pipelineName) => __aw
     const oldCiServerInstanceId = `GHA/${(0, config_1.getConfig)().octaneSharedSpace}`;
 });
 exports.updatePipelineNameIfNeeded = updatePipelineNameIfNeeded;
-const upgradePipelineToMultiBranchIfNeeded = (oldPipelineName, newPipelineName, ciIdPrefix, ciServer) => __awaiter(void 0, void 0, void 0, function* () {
+const upgradePipelineToMultiBranchIfNeeded = (oldPipelineName, newPipelineName, ciIdPrefix) => __awaiter(void 0, void 0, void 0, function* () {
     console.log(`Looking for pipeline '${oldPipelineName}'...`);
     const pipeline = yield octaneClient_1.default.getPipelineByName(oldPipelineName);
-    console.log(JSON.stringify(pipeline));
     if (!pipeline || pipeline.multi_branch_type !== null) {
         return;
     }
