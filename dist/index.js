@@ -98524,7 +98524,7 @@ const handleEvent = (event) => __awaiter(void 0, void 0, void 0, function* () {
             console.log('Getting CI Server...');
             const ciServer = yield octaneClient_1.default.getCiServerOrCreate(ciServerInstanceId, ciServerInstanceId, baseUrl, isWorkflowQueued);
             if (isWorkflowQueued) {
-                yield octaneClient_1.default.updatePluginVersionIfNeeded(owner, ciServer);
+                yield octaneClient_1.default.updatePluginVersionIfNeeded(ciServerInstanceId, ciServer);
             }
             const workflowFileName = (0, utils_1.extractWorkflowFileName)(workflowFilePath);
             const shortJobCiIdPrefix = `${owner}/${repoName}/${workflowFileName}`;
