@@ -98354,7 +98354,8 @@ OctaneClient.updatePluginVersion = (instanceId) => __awaiter(void 0, void 0, voi
     const pluginVersion = _a.GITHUB_ACTIONS_PLUGIN_VERSION;
     const client_id = _a.config.octaneClientId;
     const selfUrl = querystring.escape(_a.config.serverBaseUrl);
-    yield _a.octane.executeCustomRequest(`${_a.ANALYTICS_CI_INTERNAL_API_URL}/servers/${instanceId}/tasks?self-type=${_a.GITHUB_ACTIONS_SERVER_TYPE}&api-version=1&sdk-version=${sdk}&plugin-version=${pluginVersion}&self-url=${selfUrl}&client-id=${client_id}&client-server-user=`, alm_octane_js_rest_sdk_1.Octane.operationTypes.get);
+    const escapedInstanceId = querystring.escape(instanceId);
+    yield _a.octane.executeCustomRequest(`${_a.ANALYTICS_CI_INTERNAL_API_URL}/servers/${escapedInstanceId}/tasks?self-type=${_a.GITHUB_ACTIONS_SERVER_TYPE}&api-version=1&sdk-version=${sdk}&plugin-version=${pluginVersion}&self-url=${selfUrl}&client-id=${client_id}&client-server-user=`, alm_octane_js_rest_sdk_1.Octane.operationTypes.get);
 });
 
 
