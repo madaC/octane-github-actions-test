@@ -98556,11 +98556,6 @@ const handleEvent = (event) => __awaiter(void 0, void 0, void 0, function* () {
                 console.log(`Child pipeline start ci event: ${JSON.stringify(ciStartedPipelineEvent)}`);
                 yield octaneClient_1.default.sendEvents([ciStartedPipelineEvent], pipelineData.instanceId, pipelineData.baseUrl);
                 pipelineData = yield new genericPoller_1.GenericPoller(() => (0, pipelineDataService_1.getPipelineData)(`${pipelineData.rootJobName}/${branchName}`, ciServer, event, false), 20, 2 * 1000).poll();
-                // await updateJobsIfNeeded(
-                //   getAllJobsByPipeline(pipelineData.pipelineId),
-                //   `${jobCiIdPrefix}/${branchName}`,
-                //   ciServer.id,
-                // )
             }
             const rootParentCauseData = {
                 isRoot: true,
@@ -98569,7 +98564,6 @@ const handleEvent = (event) => __awaiter(void 0, void 0, void 0, function* () {
                 userId: (_h = event.workflow_run) === null || _h === void 0 ? void 0 : _h.triggering_actor.login,
                 userName: (_j = event.workflow_run) === null || _j === void 0 ? void 0 : _j.triggering_actor.login
             };
-            console.log(`Root parent cause data: ${JSON.stringify(rootParentCauseData)}`);
             if (isWorkflowStarted) {
                 const pollForJobStepUpdates = (jobId, interval) => __awaiter(void 0, void 0, void 0, function* () {
                     var _l;
