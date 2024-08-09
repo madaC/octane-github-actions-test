@@ -98254,28 +98254,31 @@ OctaneClient.getPipelineByRootJobCiId = (rootJobCiId, ciServer) => __awaiter(voi
         .fields('name', 'ci_server{instance_id}')
         .query(pipelineQuery)
         .execute();
-    if (!pipelines || pipelines.total_count === 0 || pipelines.data.length === 0) {
+    if (!pipelines ||
+        pipelines.total_count === 0 ||
+        pipelines.data.length === 0) {
         return undefined;
     }
     return pipelines.data;
 });
 OctaneClient.getPipelineByName = (pipelineName) => __awaiter(void 0, void 0, void 0, function* () {
     const pipelineQuery = query_1.default.field('name')
-        .equal(_a.escapeOctaneQueryValue(pipelineName)).build();
+        .equal(_a.escapeOctaneQueryValue(pipelineName))
+        .build();
     const pipelines = yield _a.octane
         .get('pipelines')
         .fields('name', 'ci_server{instance_id}', 'multi_branch_type')
         .query(pipelineQuery)
         .execute();
-    if (!pipelines || pipelines.total_count === 0 || pipelines.data.length === 0) {
+    if (!pipelines ||
+        pipelines.total_count === 0 ||
+        pipelines.data.length === 0) {
         return undefined;
     }
     return pipelines.data[0];
 });
 OctaneClient.updatePipeline = (pipeline) => __awaiter(void 0, void 0, void 0, function* () {
-    yield _a.octane
-        .update('pipelines', pipeline)
-        .execute();
+    yield _a.octane.update('pipelines', pipeline).execute();
 });
 OctaneClient.updatePipelineInternal = (pipeline) => __awaiter(void 0, void 0, void 0, function* () {
     const url = `${_a.ANALYTICS_WORKSPACE_CI_INTERNAL_API_URL}/pipeline_update`;
@@ -98290,7 +98293,9 @@ OctaneClient.getCiServer = (instanceId) => __awaiter(void 0, void 0, void 0, fun
         .fields('instance_id')
         .query(ciServerQuery)
         .execute();
-    if (!ciServers || ciServers.total_count === 0 || ciServers.data.length === 0) {
+    if (!ciServers ||
+        ciServers.total_count === 0 ||
+        ciServers.data.length === 0) {
         return undefined;
     }
     return ciServers.data[0];
@@ -98328,11 +98333,11 @@ OctaneClient.updateCiJobs = (ciJobs, ciServerId, newCiServerId) => __awaiter(voi
     const requestPayload = [];
     ciJobs.forEach((ciJob) => {
         requestPayload.push({
-            'name': ciJob.name,
-            'jobId': ciJob.jobId,
-            'jobCiId': ciJob.jobCiId,
-            'ciServer': {
-                'id': newCiServerId
+            name: ciJob.name,
+            jobId: ciJob.jobId,
+            jobCiId: ciJob.jobCiId,
+            ciServer: {
+                id: newCiServerId
             }
         });
     });
@@ -98343,14 +98348,20 @@ OctaneClient.updateCiJobs = (ciJobs, ciServerId, newCiServerId) => __awaiter(voi
 });
 OctaneClient.updatePluginVersionIfNeeded = (instanceId, ciServer) => __awaiter(void 0, void 0, void 0, function* () {
     console.log(`Current CI Server version: '${ciServer.plugin_version}'`);
-    if (!ciServer.plugin_version || (0, utils_1.isVersionGreaterOrEquals)(_a.GITHUB_ACTIONS_PLUGIN_VERSION, ciServer.plugin_version)) {
+    if (!ciServer.plugin_version ||
+        (0, utils_1.isVersionGreaterOrEqual)(_a.GITHUB_ACTIONS_PLUGIN_VERSION, ciServer.plugin_version)) {
         console.log(`Updating CI Server version to: '${_a.GITHUB_ACTIONS_PLUGIN_VERSION}'`);
         yield _a.updatePluginVersion(instanceId);
     }
 });
+OctaneClient.getOctaneVersion = () => __awaiter(void 0, void 0, void 0, function* () {
+    const response = yield _a.octane.executeCustomRequest(_a.ANALYTICS_CI_INTERNAL_API_URL + '/servers/connectivity/status', alm_octane_js_rest_sdk_1.Octane.operationTypes.get);
+    console.log("Octane connectivity status response: " + JSON.stringify(response.data));
+    return response.data.octaneVersion;
+});
 OctaneClient.updatePluginVersion = (instanceId) => __awaiter(void 0, void 0, void 0, function* () {
     const querystring = __nccwpck_require__(63477);
-    const sdk = "";
+    const sdk = '';
     const pluginVersion = _a.GITHUB_ACTIONS_PLUGIN_VERSION;
     const client_id = _a.config.octaneClientId;
     const selfUrl = querystring.escape(_a.config.serverBaseUrl);
@@ -98520,16 +98531,19 @@ const handleEvent = (event) => __awaiter(void 0, void 0, void 0, function* () {
             console.log(`Getting pipeline data...`);
             const jobs = yield githubClient_1.default.getWorkflowRunJobs(owner, repoName, workflowRunId);
             const baseUrl = (0, config_1.getConfig)().serverBaseUrl;
-            const ciServerInstanceId = `GHA-${owner}`;
+            const useOldCiServer = yield isOldCiServer();
+            const ciServerInstanceId = getCiServerInstanceId(owner, useOldCiServer);
+            const ciServerName = yield getCiServerName(owner, useOldCiServer);
             console.log('Getting CI Server...');
-            const ciServer = yield octaneClient_1.default.getCiServerOrCreate(ciServerInstanceId, ciServerInstanceId, baseUrl, isWorkflowQueued);
+            const ciServer = yield octaneClient_1.default.getCiServerOrCreate(ciServerInstanceId, ciServerName, baseUrl, isWorkflowQueued);
             if (isWorkflowQueued) {
                 yield octaneClient_1.default.updatePluginVersionIfNeeded(ciServerInstanceId, ciServer);
             }
             const workflowFileName = (0, utils_1.extractWorkflowFileName)(workflowFilePath);
             const shortJobCiIdPrefix = `${owner}/${repoName}/${workflowFileName}`;
-            const jobCiIdPrefix = isWorkflowQueued ?
-                shortJobCiIdPrefix : `${shortJobCiIdPrefix}/${branchName}`;
+            const jobCiIdPrefix = isWorkflowQueued
+                ? shortJobCiIdPrefix
+                : `${shortJobCiIdPrefix}/${branchName}`;
             const pipelineName = (0, pipelineDataService_1.getPipelineName)(event, owner, repoName, workflowFileName, eventType != "completed" /* ActionsEventType.WORKFLOW_FINISHED */, pipelineNamePattern);
             if (isWorkflowQueued) {
                 yield (0, migrationService_1.performMigrations)(event, pipelineName, shortJobCiIdPrefix, ciServer);
@@ -98683,6 +98697,28 @@ const handleEvent = (event) => __awaiter(void 0, void 0, void 0, function* () {
     }
 });
 exports.handleEvent = handleEvent;
+const isOldCiServer = () => __awaiter(void 0, void 0, void 0, function* () {
+    const octaneVersion = yield octaneClient_1.default.getOctaneVersion();
+    console.log(`Octane version: ${octaneVersion}`);
+    return !(0, utils_1.isVersionGreaterOrEqual)(octaneVersion, "24.4.19");
+});
+const getCiServerInstanceId = (repositoryOwner, useOldCiServer) => {
+    if (useOldCiServer) {
+        return `GHA/${(0, config_1.getConfig)().octaneSharedSpace}`;
+    }
+    else {
+        return `GHA-${repositoryOwner}`;
+    }
+};
+const getCiServerName = (repositoryOwner, useOldCiServer) => __awaiter(void 0, void 0, void 0, function* () {
+    if (useOldCiServer) {
+        const sharedSpaceName = yield octaneClient_1.default.getSharedSpaceName((0, config_1.getConfig)().octaneSharedSpace);
+        return `GHA/${sharedSpaceName}`;
+    }
+    else {
+        return `GHA-${repositoryOwner}`;
+    }
+});
 
 
 /***/ }),
@@ -98790,7 +98826,7 @@ const eventHandler_1 = __nccwpck_require__(97774);
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
-*/
+ */
 var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
     function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
     return new (P || (P = Promise))(function (resolve, reject) {
@@ -99218,18 +99254,18 @@ const performCiServerMigration = (newCiServer, pipelineName) => __awaiter(void 0
     if (shouldMigrateCiServer(newCiServer, oldCiServer, pipeline)) {
         console.log(`Migrating CI Server '${oldCiServer.instance_id}' to '${newCiServer.instance_id}'...`);
         yield (0, pipelineDataService_1.updatePipeline)({
-            'id': pipeline.id,
-            'ciServer': {
-                'type': 'ci_server',
-                'id': newCiServer.id
+            id: pipeline.id,
+            ciServer: {
+                type: 'ci_server',
+                id: newCiServer.id
             }
         });
         yield (0, ciJobService_1.updateJobsCiServerIfNeeded)(yield (0, ciJobService_1.getAllJobsByPipeline)(pipeline.id), oldCiServer.id, newCiServer.id);
     }
 });
 const shouldMigrateCiServer = (newCiServer, oldCiServer, pipeline) => {
-    return newCiServer.instance_id != oldCiServer.instance_id &&
-        oldCiServer.id === pipeline.ci_server.id;
+    return (newCiServer.instance_id != oldCiServer.instance_id &&
+        oldCiServer.id === pipeline.ci_server.id);
 };
 
 
@@ -99336,11 +99372,13 @@ const updatePipelineNameIfNeeded = (rootJobCiId, ciServer, pipelineName) => __aw
     yield Promise.all(pipelines.map((pipeline) => __awaiter(void 0, void 0, void 0, function* () {
         const nameTokens = pipeline.name.split('/');
         if (pipeline.name !== pipelineName && nameTokens[0] !== pipelineName) {
-            const fullPipelineName = nameTokens.length === 2 ? `${pipelineName}/${nameTokens[1]}` : pipelineName;
+            const fullPipelineName = nameTokens.length === 2
+                ? `${pipelineName}/${nameTokens[1]}`
+                : pipelineName;
             console.log(`Renaming '${pipeline.name}' to '${fullPipelineName}'`);
             yield octaneClient_1.default.updatePipeline({
-                'id': pipeline.id,
-                'name': fullPipelineName
+                id: pipeline.id,
+                name: fullPipelineName
             });
         }
     })));
@@ -99741,7 +99779,7 @@ exports.GenericPoller = GenericPoller;
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
-*/
+ */
 var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
     if (k2 === undefined) k2 = k;
     var desc = Object.getOwnPropertyDescriptor(m, k);
@@ -99775,13 +99813,13 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.sleep = exports.isVersionGreaterOrEquals = exports.extractWorkflowFileName = void 0;
+exports.sleep = exports.isVersionGreaterOrEqual = exports.extractWorkflowFileName = void 0;
 const path = __importStar(__nccwpck_require__(71017));
 const extractWorkflowFileName = (workflowPath) => {
     return path.basename(workflowPath);
 };
 exports.extractWorkflowFileName = extractWorkflowFileName;
-const isVersionGreaterOrEquals = (version1, version2) => {
+const isVersionGreaterOrEqual = (version1, version2) => {
     if (!version1 || !version2) {
         return false;
     }
@@ -99796,7 +99834,7 @@ const isVersionGreaterOrEquals = (version1, version2) => {
     }
     return version1Array.length >= version2Array.length;
 };
-exports.isVersionGreaterOrEquals = isVersionGreaterOrEquals;
+exports.isVersionGreaterOrEqual = isVersionGreaterOrEqual;
 const sleep = (milis) => __awaiter(void 0, void 0, void 0, function* () {
     return new Promise(resolve => {
         setTimeout(resolve, milis);
