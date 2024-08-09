@@ -98531,7 +98531,7 @@ const handleEvent = (event) => __awaiter(void 0, void 0, void 0, function* () {
             console.log(`Getting pipeline data...`);
             const jobs = yield githubClient_1.default.getWorkflowRunJobs(owner, repoName, workflowRunId);
             const baseUrl = (0, config_1.getConfig)().serverBaseUrl;
-            const useOldCiServer = yield isOldCiServer();
+            const useOldCiServer = false; // await isOldCiServer();
             const ciServerInstanceId = getCiServerInstanceId(owner, useOldCiServer);
             const ciServerName = yield getCiServerName(owner, useOldCiServer);
             console.log('Getting CI Server...');
