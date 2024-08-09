@@ -21,14 +21,14 @@ jobs:
       - uses: actions/checkout@v4
       - name: GitHub Actions ALM Octane Integration
         # Reference to our public GitHub action
-        uses: ./
-        #uses: MicroFocus/alm-octane-github-actions-integration@v23.3.0
+        #uses: ./
+        uses: MicroFocus/alm-octane-github-actions-integration@v23.3.0
         id: gitHubActionsIntegration
         # Config parameters for the integration
         with:
           # ALM Octane connection data
-          #octaneUrl: 'https://laura-2.almoctane.com'
-          octaneUrl: 'http://localhost:8080/dev'
+          octaneUrl: 'https://laura-2.almoctane.com'
+          #octaneUrl: 'http://localhost:8080/dev'
           octaneSharedSpace: 1001
           octaneWorkspace: 1002
           #octaneClientId: ${{secrets.ALM_OCTANE_CLIENT_ID}}
