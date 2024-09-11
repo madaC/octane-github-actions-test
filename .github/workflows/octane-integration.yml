@@ -21,13 +21,13 @@ jobs:
       - uses: actions/checkout@v4
       - name: GitHub Actions ALM Octane Integration
         # Reference to our public GitHub action
-        uses: ./
-        #uses: MicroFocus/alm-octane-github-actions-integration@v23.3.0
+        #uses: ./
+        uses: MicroFocus/alm-octane-github-actions-integration@v23.3.0
         id: gitHubActionsIntegration
         # Config parameters for the integration
         with:
           # ALM Octane connection data
-          octaneUrl: 'https://laura-2.almoctane.com'
+          octaneUrl: 'http://puevm0713.swinfra.net:8080/'
           #octaneUrl: 'http://localhost:8080/dev'
           octaneSharedSpace: 1001
           octaneWorkspace: 1002
@@ -40,6 +40,6 @@ jobs:
           # The url that the CI Server in ALM Octane will point to (own)
           serverBaseUrl: 'https://github.com'
           # Pattern for building the name of the pipeline
-          pipelineNamePattern: '${workflow_name} ${repository_owner} ${repository_name}'
+          #pipelineNamePattern: '${workflow_name} ${repository_owner} ${repository_name}'
           # Pattern for identifying JUnit style report files for test result injection in ALM Octane
           unitTestResultsGlobPattern: "**/*.xml"
